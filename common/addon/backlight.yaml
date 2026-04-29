@@ -731,10 +731,12 @@ script:
           char buf[6];
           snprintf(buf, sizeof(buf), "%02d:%02d", hour, minute);
           lv_label_set_text(id(clock_label), buf);
+          lv_obj_update_layout(id(clock_screensaver));
           lv_obj_update_layout(id(clock_label));
           lv_coord_t w = lv_obj_get_width(id(clock_label));
           lv_coord_t h = lv_obj_get_height(id(clock_label));
-          int cx = ${clock_cx}, cy = ${clock_cy};
+          int cx = lv_obj_get_width(id(clock_screensaver)) / 2;
+          int cy = lv_obj_get_height(id(clock_screensaver)) / 2;
           int ox = (minute * 7) % 25 - 12;
           int oy = (minute * 13) % 17 - 8;
           lv_obj_set_pos(id(clock_label), cx + ox - w/2, cy + oy - h/2);
@@ -812,10 +814,12 @@ interval:
           char buf[6];
           snprintf(buf, sizeof(buf), "%02d:%02d", time.hour, time.minute);
           lv_label_set_text(id(clock_label), buf);
+          lv_obj_update_layout(id(clock_screensaver));
           lv_obj_update_layout(id(clock_label));
           lv_coord_t w = lv_obj_get_width(id(clock_label));
           lv_coord_t h = lv_obj_get_height(id(clock_label));
-          int cx = ${clock_cx}, cy = ${clock_cy};
+          int cx = lv_obj_get_width(id(clock_screensaver)) / 2;
+          int cy = lv_obj_get_height(id(clock_screensaver)) / 2;
           int ox = (time.minute * 7) % 25 - 12;
           int oy = (time.minute * 13) % 17 - 8;
           lv_obj_set_pos(id(clock_label), cx + ox - w/2, cy + oy - h/2);
