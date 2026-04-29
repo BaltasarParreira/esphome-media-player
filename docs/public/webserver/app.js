@@ -339,9 +339,6 @@
   function setupCard() {
     var body = el("div");
     body.appendChild(textField("Media Player", "media_player", "media_player.living_room", validateMediaPlayer));
-    var hint = el("div", "field-hint");
-    hint.textContent = "Changing the media player can reboot the device so Home Assistant subscriptions refresh.";
-    body.appendChild(hint);
     return card("Home Assistant Media Player", body, false);
   }
 
