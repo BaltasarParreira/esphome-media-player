@@ -370,6 +370,7 @@
     var body = el("div");
     var timerWrap = el("div");
     var enabled = Number(S.speaker_panel_timeout) > 0;
+    var badge = badgeFor(enabled);
     timerWrap.style.display = enabled ? "" : "none";
     body.appendChild(localToggleField("Speaker Panel Auto-Close", enabled, function (next) {
       var value = next
@@ -377,11 +378,12 @@
         : 0;
       S.speaker_panel_timeout = value;
       if (value > 0) lastSpeakerPanelTimeout = value;
+      badge.className = "on-badge" + (value > 0 ? " active" : "");
       post(endpoint("speaker_panel_timeout") + "/set", { value: value }).then(renderAll);
     }));
     timerWrap.appendChild(durationSelectField("Timer", "speaker_panel_timeout", SPEAKER_PANEL_TIMEOUT_OPTIONS));
     body.appendChild(timerWrap);
-    return card("Volume", body, true);
+    return card("Volume", body, true, badge);
   }
 
   function trackClockModeText() {
