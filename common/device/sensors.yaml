@@ -82,58 +82,62 @@ interval:
             if (dur > 0 && pos > dur) pos = dur;
             id(last_media_position) = pos;
           }
-      - lvgl.label.update:
-            id: media_time_label
-            text: !lambda |-
-              if (id(is_tv_idle)) return std::string("");
-              float pos = id(is_tv_mode) ? id(last_tv_media_position) : id(last_media_position);
-              float dur;
-              if (id(is_tv_mode)) {
-                dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
-              } else {
-                dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
-              }
-              int e = (int)pos; if (e < 0) e = 0;
-              char buf[32];
-              if (id(show_remaining_time).state) {
-                int rem = (int)(dur - pos); if (rem < 0) rem = 0;
-                if (dur >= 3600) {
-                  snprintf(buf, sizeof(buf), "%d:%02d:%02d / -%d:%02d:%02d",
-                           e / 3600, (e % 3600) / 60, e % 60,
-                           rem / 3600, (rem % 3600) / 60, rem % 60);
-                } else {
-                  snprintf(buf, sizeof(buf), "%d:%02d / -%d:%02d", e / 60, e % 60, rem / 60, rem % 60);
-                }
-              } else {
-                int d = (int)dur; if (d < 0) d = 0;
-                if (dur >= 3600) {
-                  snprintf(buf, sizeof(buf), "%d:%02d:%02d / %d:%02d:%02d",
-                           e / 3600, (e % 3600) / 60, e % 60,
-                           d / 3600, (d % 3600) / 60, d % 60);
-                } else {
-                  snprintf(buf, sizeof(buf), "%d:%02d / %d:%02d", e / 60, e % 60, d / 60, d % 60);
-                }
-              }
-              return std::string(buf);
       - if:
           condition:
-            lambda: 'return !id(show_progress_bar).state || id(is_tv_idle);'
+            lambda: 'return !id(web_settings_active);'
           then:
-            - lvgl.widget.hide: media_progress_bar
-          else:
-            - lvgl.widget.show: media_progress_bar
-            - lvgl.bar.update:
-                id: media_progress_bar
-                value: !lambda |-
-                  float pos = id(is_tv_mode) ? id(last_tv_media_position) : id(last_media_position);
-                  float dur;
-                  if (id(is_tv_mode)) {
-                    dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
-                  } else {
-                    dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
-                  }
-                  if (dur > 0) return (int)((pos / dur) * 100.0f);
-                  return 0;
+            - lvgl.label.update:
+                  id: media_time_label
+                  text: !lambda |-
+                    if (id(is_tv_idle)) return std::string("");
+                    float pos = id(is_tv_mode) ? id(last_tv_media_position) : id(last_media_position);
+                    float dur;
+                    if (id(is_tv_mode)) {
+                      dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
+                    } else {
+                      dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
+                    }
+                    int e = (int)pos; if (e < 0) e = 0;
+                    char buf[32];
+                    if (id(show_remaining_time).state) {
+                      int rem = (int)(dur - pos); if (rem < 0) rem = 0;
+                      if (dur >= 3600) {
+                        snprintf(buf, sizeof(buf), "%d:%02d:%02d / -%d:%02d:%02d",
+                                 e / 3600, (e % 3600) / 60, e % 60,
+                                 rem / 3600, (rem % 3600) / 60, rem % 60);
+                      } else {
+                        snprintf(buf, sizeof(buf), "%d:%02d / -%d:%02d", e / 60, e % 60, rem / 60, rem % 60);
+                      }
+                    } else {
+                      int d = (int)dur; if (d < 0) d = 0;
+                      if (dur >= 3600) {
+                        snprintf(buf, sizeof(buf), "%d:%02d:%02d / %d:%02d:%02d",
+                                 e / 3600, (e % 3600) / 60, e % 60,
+                                 d / 3600, (d % 3600) / 60, d % 60);
+                      } else {
+                        snprintf(buf, sizeof(buf), "%d:%02d / %d:%02d", e / 60, e % 60, d / 60, d % 60);
+                      }
+                    }
+                    return std::string(buf);
+            - if:
+                condition:
+                  lambda: 'return !id(show_progress_bar).state || id(is_tv_idle);'
+                then:
+                  - lvgl.widget.hide: media_progress_bar
+                else:
+                  - lvgl.widget.show: media_progress_bar
+                  - lvgl.bar.update:
+                      id: media_progress_bar
+                      value: !lambda |-
+                        float pos = id(is_tv_mode) ? id(last_tv_media_position) : id(last_media_position);
+                        float dur;
+                        if (id(is_tv_mode)) {
+                          dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
+                        } else {
+                          dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
+                        }
+                        if (dur > 0) return (int)((pos / dur) * 100.0f);
+                        return 0;
 
 script:
   # Start the hide timer only (no show). Used when artwork finishes loading or when
@@ -144,7 +148,7 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(track_info_duration).state > 0;'
+            lambda: 'return !id(web_settings_active) && id(track_info_duration).state > 0;'
           then:
             - delay: !lambda 'return (uint32_t)(id(track_info_duration).state * 1000);'
             - if:
@@ -156,7 +160,7 @@ script:
                     } else {
                       playing = id(media_player_state_sensor).has_state() && id(media_player_state_sensor).state == "playing";
                     }
-                    return !id(is_ui_hidden) && playing;
+                    return !id(web_settings_active) && !id(is_ui_hidden) && playing;
                 then:
                   - script.execute: toggle_ui
 
@@ -165,10 +169,14 @@ script:
     then:
       - script.stop: delayed_idle_cleanup
       - delay: 300ms
-      - lvgl.widget.hide: artwork_error_label
-      - artwork_image.set_url:
-          id: album_art_background
-          url: !lambda 'return id(last_artwork_url);'
+      - if:
+          condition:
+            lambda: 'return !id(web_settings_active);'
+          then:
+            - lvgl.widget.hide: artwork_error_label
+            - artwork_image.set_url:
+                id: album_art_background
+                url: !lambda 'return id(last_artwork_url);'
 
   - id: delayed_idle_cleanup
     mode: restart
@@ -211,7 +219,7 @@ text_sensor:
     on_value:
       - if:
           condition:
-            lambda: 'return !id(is_tv_mode) && !x.empty();'
+            lambda: 'return !id(web_settings_active) && !id(is_tv_mode) && !x.empty();'
           then:
             - if:
                 condition:
@@ -252,7 +260,7 @@ text_sensor:
       - if:
           condition:
             lambda: |-
-              return !id(is_tv_mode) && !x.empty() && x != "\xe2\x80\x94";
+              return !id(web_settings_active) && !id(is_tv_mode) && !x.empty() && x != "\xe2\x80\x94";
           then:
             - lambda: 'id(artist_has_content) = true;'
             - lvgl.label.update:
@@ -287,7 +295,19 @@ text_sensor:
             - lambda: 'id(media_source_sensor).publish_state("");'
       - if:
           condition:
-            lambda: 'return !id(is_tv_mode);'
+            lambda: |-
+              return id(web_settings_active)
+                  && !id(is_tv_mode)
+                  && (x == "idle" || x == "off" || x == "standby");
+          then:
+            - lambda: |-
+                id(last_media_position) = 0.0f;
+                id(ha_position_epoch) = 0;
+                id(last_position_timestamp) = 0;
+                id(last_artwork_url) = "";
+      - if:
+          condition:
+            lambda: 'return !id(web_settings_active) && !id(is_tv_mode);'
           then:
             - if:
                 condition:

@@ -275,7 +275,11 @@ touchscreen:
           id(touch_x_end) = touch.x;
           id(touch_y_end) = touch.y;
           id(touch_start_time) = millis();
-      - script.execute: backlight_wake_timeout
+      - if:
+          condition:
+            lambda: 'return !id(web_settings_active);'
+          then:
+            - script.execute: backlight_wake_timeout
       - lambda: |-
           if (id(is_panel_open)) id(start_speaker_panel_timeout).execute();
     on_update:
@@ -288,6 +292,8 @@ touchscreen:
           }
     on_release:
       - lambda: |-
+          if (id(web_settings_active)) return;
+
           int dx = id(touch_x_end) - id(touch_x_start);
           int dy = id(touch_y_end) - id(touch_y_start);
           int sy = id(touch_y_start);
@@ -407,6 +413,11 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: toggle_ui
+      - if:
+          condition:
             lambda: 'return id(is_ui_hidden);'
           then:
             - lambda: 'id(is_ui_hidden) = false;'
@@ -501,6 +512,11 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: show_track_view
+      - if:
+          condition:
             lambda: 'return id(is_panel_open) && lv_obj_has_flag(id(speakers_container), LV_OBJ_FLAG_HIDDEN);'
           then:
             - lvgl.widget.hide: settings_panel
@@ -529,9 +545,18 @@ script:
           id(is_tv_mode) = true;
           id(is_tv_idle) = false;
           id(last_tv_artwork_url) = "";
+          if (id(web_settings_active)) {
+            id(is_tv_idle) = id(linked_media_player_entity).state.empty();
+            return;
+          }
           lv_obj_set_style_bg_color(id(accent_overlay), lv_color_make(0, 0, 0), 0);
           lv_obj_set_style_bg_color(id(artwork_bg_panel), lv_color_make(0, 0, 0), 0);
           lv_obj_set_style_bg_color(id(media_play_pause_button), lv_color_make(0, 0, 0), 0);
+      - if:
+          condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: enter_tv_mode
       - lvgl.label.update:
           id: media_title_label
           text: !lambda 'return id(media_source_sensor).state;'
@@ -617,9 +642,15 @@ script:
       - lambda: |-
           id(is_tv_mode) = false;
           id(is_tv_idle) = false;
+          if (id(web_settings_active)) return;
           lv_obj_set_style_bg_color(id(artwork_bg_panel), lv_color_make(0, 0, 0), 0);
           lv_obj_set_size(id(album_art_background_widget), 480, 480);
           lv_obj_set_pos(id(album_art_background_widget), 0, 0);
+      - if:
+          condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: exit_tv_mode
       - lvgl.widget.show: media_play_pause_button
       - lvgl.widget.show: media_time_label
       - lvgl.label.update:

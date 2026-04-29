@@ -14,6 +14,8 @@
 
   var DEFAULT_SPEAKER_PANEL_TIMEOUT = 10;
   var SPEAKER_PANEL_TIMEOUT_OPTIONS = [5, 10, 20, 30, 60];
+  var S3_DEVICE_PROFILE = "guition-esp32-s3-4848s040";
+  var WEB_ACTIVITY_HEARTBEAT_MS = 10000;
 
   var S = {
     media_player: "",
@@ -122,6 +124,9 @@
   var evtSource = null;
   var cardCollapsed = {};
   var lastSpeakerPanelTimeout = DEFAULT_SPEAKER_PANEL_TIMEOUT;
+  var webActivityTimer = null;
+  var webActivityStarted = false;
+  var webActivityClosed = false;
 
   function eid(domain, name) {
     return "/" + domain + "/" + encodeURIComponent(name);
@@ -171,6 +176,44 @@
       showBanner("Failed to save setting", "error");
       return null;
     });
+  }
+
+  function postQuiet(url) {
+    return fetch(url, { method: "POST", keepalive: true }).catch(function () {
+      return null;
+    });
+  }
+
+  function isS3Display() {
+    return S.device_profile === S3_DEVICE_PROFILE;
+  }
+
+  function webActivityEndpoint(name) {
+    return eid("button", name) + "/press";
+  }
+
+  function sendWebActivityHeartbeat() {
+    if (!isS3Display()) return;
+    webActivityStarted = true;
+    webActivityClosed = false;
+    postQuiet(webActivityEndpoint("Web Settings Heartbeat"));
+  }
+
+  function startWebActivityHeartbeat() {
+    if (!isS3Display() || webActivityTimer) return;
+    sendWebActivityHeartbeat();
+    webActivityTimer = setInterval(sendWebActivityHeartbeat, WEB_ACTIVITY_HEARTBEAT_MS);
+  }
+
+  function stopWebActivityHeartbeat() {
+    if (webActivityTimer) {
+      clearInterval(webActivityTimer);
+      webActivityTimer = null;
+    }
+    if (webActivityStarted && !webActivityClosed && isS3Display()) {
+      webActivityClosed = true;
+      postQuiet(webActivityEndpoint("Web Settings Closed"));
+    }
   }
 
   function postText(url, value) {
@@ -225,6 +268,8 @@
     } else if (v != null) {
       S[key] = String(v);
     }
+
+    if (key === "device_profile") startWebActivityHeartbeat();
   }
 
   function fetchEntity(key) {
@@ -1122,6 +1167,11 @@
 
   buildUI();
   renderAll();
-  fetchAllState().then(renderAll);
+  fetchAllState().then(function () {
+    renderAll();
+    startWebActivityHeartbeat();
+  });
   initSSE();
+  window.addEventListener("pagehide", stopWebActivityHeartbeat);
+  window.addEventListener("beforeunload", stopWebActivityHeartbeat);
 })();

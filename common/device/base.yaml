@@ -11,6 +11,11 @@ substitutions:
   screen_schedule_internal: "true"
   ha_config_internal: "false"
 
+globals:
+  - id: web_settings_active
+    type: bool
+    initial_value: 'false'
+
 packages:
   time_sync: !include ../addon/time.yaml
   timezone: !include ../addon/timezone.yaml

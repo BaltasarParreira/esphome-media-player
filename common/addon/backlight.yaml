@@ -545,6 +545,11 @@ script:
   - id: backlight_wake_timeout
     mode: restart
     then:
+      - if:
+          condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: backlight_wake_timeout
       - lambda: |-
           if (!id(schedule_enabled).state) return;
 
@@ -675,6 +680,11 @@ script:
   - id: turn_off_display
     mode: single
     then:
+      - if:
+          condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: turn_off_display
       - script.stop: backlight_wake_timeout
       - lambda: 'id(is_screen_dimmed) = true;'
       - light.turn_off:
@@ -690,6 +700,11 @@ script:
   - id: show_clock_view
     mode: restart
     then:
+      - if:
+          condition:
+            lambda: 'return id(web_settings_active);'
+          then:
+            - script.stop: show_clock_view
       - if:
           condition: lvgl.is_paused
           then:

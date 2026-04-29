@@ -1,8 +1,9 @@
 # =============================================================================
-# WEB SETTINGS UI - ESP32-P4 only
+# WEB SETTINGS UI
 # =============================================================================
-# Serves the browser-based settings interface used by the P4 devices. The S3
-# device deliberately does not include this package to keep its firmware smaller.
+# Serves the browser-based settings interface. S3 devices pair this with a small
+# activity heartbeat package that pauses the normal artwork screen while the
+# browser is using the constrained display.
 # =============================================================================
 
 json:
@@ -20,6 +21,7 @@ web_server:
   port: 80
   version: 3
   include_internal: true
+  log: false
   js_url: "https://jtenniswood.github.io/esphome-media-player/webserver/app.js"
   sorting_groups:
     - id: sg_setup
