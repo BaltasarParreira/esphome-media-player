@@ -23,7 +23,8 @@ substitutions:
   pause_lvgl_on_screen_off: "false"
   clock_screensaver_supported: "true"
   idle_action_default: "Clock"
-  screen_schedule_internal: "false"
+  screen_schedule_internal: "true"
+  ha_config_internal: "true"
 
   # Setup screens
   setup_content_width: "700"

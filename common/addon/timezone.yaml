@@ -26,6 +26,7 @@ select:
     id: clock_timezone
     icon: "mdi:map-clock"
     entity_category: config
+    internal: ${ha_config_internal}
     optimistic: true
     restore_value: true
     initial_option: "UTC (GMT+0)"

@@ -28,6 +28,7 @@ text:
     name: "Media Player"
     id: media_player_entity
     entity_category: config
+    internal: ${ha_config_internal}
     icon: "mdi:cast-audio"
     mode: text
     optimistic: true
@@ -76,6 +77,7 @@ text:
     name: "Linked Media Player"
     id: linked_media_player_entity
     entity_category: config
+    internal: ${ha_config_internal}
     icon: "mdi:link-variant"
     mode: text
     optimistic: true

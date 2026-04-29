@@ -41,6 +41,7 @@ switch:
     name: "Firmware: Auto Update"
     id: auto_update_switch
     entity_category: config
+    internal: ${ha_config_internal}
     icon: "mdi:update"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
@@ -50,6 +51,7 @@ select:
     name: "Firmware: Update Frequency"
     id: update_frequency_select
     entity_category: config
+    internal: ${ha_config_internal}
     icon: "mdi:timer-outline"
     options:
       - "Hourly"
@@ -78,6 +80,7 @@ button:
   - platform: template
     name: "Firmware: Check for Update"
     entity_category: config
+    internal: ${ha_config_internal}
     icon: "mdi:update"
     on_press:
       - lambda: 'id(manual_check_only) = true;'

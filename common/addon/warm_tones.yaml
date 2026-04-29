@@ -39,6 +39,7 @@ number:
     unit_of_measurement: "%"
     icon: "mdi:white-balance-sunny"
     entity_category: config
+    internal: ${ha_config_internal}
     on_value:
       then:
         - lambda: 'id(warm_tone_retint) = true;'
@@ -56,6 +57,7 @@ number:
     unit_of_measurement: "%"
     icon: "mdi:weather-night"
     entity_category: config
+    internal: ${ha_config_internal}
     on_value:
       then:
         - lambda: 'id(warm_tone_retint) = true;'

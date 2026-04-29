@@ -465,6 +465,7 @@ number:
     unit_of_measurement: "s"
     icon: "mdi:timer-outline"
     entity_category: config
+    internal: ${ha_config_internal}
     mode: box
 
   - platform: template
@@ -479,6 +480,7 @@ number:
     unit_of_measurement: "s"
     icon: "mdi:timer-lock-outline"
     entity_category: config
+    internal: ${ha_config_internal}
     mode: box
 
 switch:
@@ -489,6 +491,7 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
     icon: "mdi:timer-sand"
     entity_category: config
+    internal: ${ha_config_internal}
 
   - platform: template
     name: "Playback: Show Progress Bar"
@@ -497,3 +500,4 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
     icon: "mdi:progress-clock"
     entity_category: config
+    internal: ${ha_config_internal}
