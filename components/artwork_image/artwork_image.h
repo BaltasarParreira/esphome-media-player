@@ -124,7 +124,7 @@ class ArtworkImage : public PollingComponent,
   uint32_t get_buffer_size_() const { return get_buffer_size_(this->buffer_width_, this->buffer_height_); }
   int get_buffer_size_(int width, int height) const { return (this->get_bpp() * width + 7u) / 8u * height; }
 
-  int get_position_(int x, int y) const { return (x + y * this->buffer_width_) * this->get_bpp() / 8; }
+  int get_position_(int x, int y) const { return (x + y * this->decode_buffer_width_) * this->get_bpp() / 8; }
 
   ESPHOME_ALWAYS_INLINE bool is_auto_resize_() const { return this->fixed_width_ == 0 || this->fixed_height_ == 0; }
 
@@ -142,6 +142,11 @@ class ArtworkImage : public PollingComponent,
    * @return 0 if no memory could be allocated, the size of the new buffer otherwise.
    */
   size_t resize_(int width, int height);
+  size_t get_decode_buffer_size_() const { return get_buffer_size_(this->decode_buffer_width_, this->decode_buffer_height_); }
+  void discard_decode_buffer_();
+  void promote_decode_buffer_();
+  void retire_active_buffer_();
+  void cleanup_retired_buffers_(bool force);
 
   /**
    * @brief Draw a pixel into the buffer.
@@ -165,6 +170,7 @@ class ArtworkImage : public PollingComponent,
   std::unique_ptr<ImageDecoder> decoder_{nullptr};
 
   uint8_t *buffer_;
+  uint8_t *decode_buffer_{nullptr};
   DownloadBuffer download_buffer_;
   /**
    * This is the *initial* size of the download buffer, not the current size.
@@ -207,6 +213,14 @@ class ArtworkImage : public PollingComponent,
    * decoded images).
    */
   int buffer_height_;
+  int decode_buffer_width_{0};
+  int decode_buffer_height_{0};
+  struct RetiredBuffer {
+    uint8_t *data;
+    size_t size;
+    uint32_t retired_at;
+  };
+  std::vector<RetiredBuffer> retired_buffers_{};
   time_t start_time_;
   uint32_t last_data_millis_{0};
   bool update_pending_{false};

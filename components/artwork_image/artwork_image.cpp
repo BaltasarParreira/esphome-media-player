@@ -10,6 +10,8 @@
 
 static const char *const TAG = "artwork_image";
 static const char *const CONTENT_TYPE_HEADER_NAME = "content-type";
+static constexpr uint32_t RETIRED_BUFFER_GRACE_MS = 1000;
+static constexpr size_t MAX_RETIRED_BUFFERS = 2;
 
 #include "image_decoder.h"
 
@@ -64,6 +66,7 @@ void ArtworkImage::draw(int x, int y, display::Display *display, Color color_on,
 void ArtworkImage::release() {
   this->update_pending_ = false;
   this->pending_url_.clear();
+  this->discard_decode_buffer_();
   if (this->buffer_) {
     ESP_LOGV(TAG, "Deallocating old buffer");
     this->allocator_.deallocate(this->buffer_, this->get_buffer_size_());
@@ -76,8 +79,9 @@ void ArtworkImage::release() {
 #ifdef USE_LVGL
     memset(&this->dsc_, 0, sizeof(this->dsc_));
 #endif
-    this->end_connection_();
   }
+  this->end_connection_();
+  this->cleanup_retired_buffers_(true);
 }
 
 size_t ArtworkImage::resize_(int width_in, int height_in) {
@@ -86,9 +90,6 @@ size_t ArtworkImage::resize_(int width_in, int height_in) {
   if (this->is_auto_resize_()) {
     width = width_in;
     height = height_in;
-    if (this->width_ != width && this->height_ != height) {
-      this->release();
-    }
   } else if (width_in > 0 && height_in > 0) {
     if (width_in == height_in) {
       if (width_in < this->fixed_width_) {
@@ -107,39 +108,27 @@ size_t ArtworkImage::resize_(int width_in, int height_in) {
     }
   }
   size_t new_size = this->get_buffer_size_(width, height);
-  if (this->buffer_) {
-    if (new_size <= this->get_buffer_size_()) {
-      this->buffer_width_ = width;
-      this->buffer_height_ = height;
-      this->width_ = width;
-      this->height_ = height;
-#ifdef USE_LVGL
-      memset(&this->dsc_, 0, sizeof(this->dsc_));
-#endif
+  if (this->decode_buffer_) {
+    if (new_size <= this->get_decode_buffer_size_()) {
+      this->decode_buffer_width_ = width;
+      this->decode_buffer_height_ = height;
       return new_size;
     }
-    this->allocator_.deallocate(this->buffer_, this->get_buffer_size_());
-    this->buffer_ = nullptr;
-    this->data_start_ = nullptr;
-#ifdef USE_LVGL
-    memset(&this->dsc_, 0, sizeof(this->dsc_));
-#endif
+    this->allocator_.deallocate(this->decode_buffer_, this->get_decode_buffer_size_());
+    this->decode_buffer_ = nullptr;
+    this->decode_buffer_width_ = 0;
+    this->decode_buffer_height_ = 0;
   }
-  ESP_LOGD(TAG, "Allocating new buffer of %zu bytes", new_size);
-  this->buffer_ = this->allocator_.allocate(new_size);
-  if (this->buffer_ == nullptr) {
+  ESP_LOGD(TAG, "Allocating decode buffer of %zu bytes", new_size);
+  this->decode_buffer_ = this->allocator_.allocate(new_size);
+  if (this->decode_buffer_ == nullptr) {
     ESP_LOGE(TAG, "allocation of %zu bytes failed. Biggest block in heap: %zu Bytes", new_size,
              this->allocator_.get_max_free_block_size());
     this->end_connection_();
     return 0;
   }
-  this->buffer_width_ = width;
-  this->buffer_height_ = height;
-  this->width_ = width;
-  this->height_ = height;
-#ifdef USE_LVGL
-  memset(&this->dsc_, 0, sizeof(this->dsc_));
-#endif
+  this->decode_buffer_width_ = width;
+  this->decode_buffer_height_ = height;
   ESP_LOGV(TAG, "New size: (%d, %d)", width, height);
   return new_size;
 }
@@ -255,6 +244,7 @@ void ArtworkImage::update() {
 }
 
 void ArtworkImage::loop() {
+  this->cleanup_retired_buffers_(false);
   if (!this->decoder_ && !this->downloader_) {
     this->disable_loop();
     return;
@@ -317,9 +307,7 @@ void ArtworkImage::loop() {
   }
 
   if (this->decoder_->is_finished()) {
-    this->data_start_ = buffer_;
-    this->width_ = buffer_width_;
-    this->height_ = buffer_height_;
+    this->promote_decode_buffer_();
     this->log_state_("download-complete");
     ESP_LOGD(TAG, "Image fully downloaded, read %zu bytes, width/height = %d/%d", this->downloader_->get_bytes_read(),
              this->width_, this->height_);
@@ -383,18 +371,18 @@ void ArtworkImage::map_chroma_key(Color &color) {
 }
 
 void ArtworkImage::draw_pixel_(int x, int y, Color color) {
-  if (!this->buffer_) {
-    ESP_LOGE(TAG, "Buffer not allocated!");
+  if (!this->decode_buffer_) {
+    ESP_LOGE(TAG, "Decode buffer not allocated!");
     return;
   }
-  if (x < 0 || y < 0 || x >= this->buffer_width_ || y >= this->buffer_height_) {
+  if (x < 0 || y < 0 || x >= this->decode_buffer_width_ || y >= this->decode_buffer_height_) {
     ESP_LOGE(TAG, "Tried to paint a pixel (%d,%d) outside the image!", x, y);
     return;
   }
   uint32_t pos = this->get_position_(x, y);
   switch (this->type_) {
     case ImageType::IMAGE_TYPE_BINARY: {
-      const uint32_t width_8 = ((this->width_ + 7u) / 8u) * 8u;
+      const uint32_t width_8 = ((this->decode_buffer_width_ + 7u) / 8u) * 8u;
       pos = x + y * width_8;
       auto bitno = 0x80 >> (pos % 8u);
       pos /= 8u;
@@ -402,9 +390,9 @@ void ArtworkImage::draw_pixel_(int x, int y, Color color) {
       if (this->has_transparency() && color.w < 0x80)
         on = false;
       if (on) {
-        this->buffer_[pos] |= bitno;
+        this->decode_buffer_[pos] |= bitno;
       } else {
-        this->buffer_[pos] &= ~bitno;
+        this->decode_buffer_[pos] &= ~bitno;
       }
       break;
     }
@@ -421,31 +409,31 @@ void ArtworkImage::draw_pixel_(int x, int y, Color color) {
         if (color.w != 0xFF)
           gray = color.w;
       }
-      this->buffer_[pos] = gray;
+      this->decode_buffer_[pos] = gray;
       break;
     }
     case ImageType::IMAGE_TYPE_RGB565: {
       this->map_chroma_key(color);
       uint16_t col565 = display::ColorUtil::color_to_565(color);
       if (this->is_big_endian_) {
-        this->buffer_[pos + 0] = static_cast<uint8_t>((col565 >> 8) & 0xFF);
-        this->buffer_[pos + 1] = static_cast<uint8_t>(col565 & 0xFF);
+        this->decode_buffer_[pos + 0] = static_cast<uint8_t>((col565 >> 8) & 0xFF);
+        this->decode_buffer_[pos + 1] = static_cast<uint8_t>(col565 & 0xFF);
       } else {
-        this->buffer_[pos + 0] = static_cast<uint8_t>(col565 & 0xFF);
-        this->buffer_[pos + 1] = static_cast<uint8_t>((col565 >> 8) & 0xFF);
+        this->decode_buffer_[pos + 0] = static_cast<uint8_t>(col565 & 0xFF);
+        this->decode_buffer_[pos + 1] = static_cast<uint8_t>((col565 >> 8) & 0xFF);
       }
       if (this->transparency_ == image::TRANSPARENCY_ALPHA_CHANNEL) {
-        this->buffer_[pos + 2] = color.w;
+        this->decode_buffer_[pos + 2] = color.w;
       }
       break;
     }
     case ImageType::IMAGE_TYPE_RGB: {
       this->map_chroma_key(color);
-      this->buffer_[pos + 0] = color.r;
-      this->buffer_[pos + 1] = color.g;
-      this->buffer_[pos + 2] = color.b;
+      this->decode_buffer_[pos + 0] = color.r;
+      this->decode_buffer_[pos + 1] = color.g;
+      this->decode_buffer_[pos + 2] = color.b;
       if (this->transparency_ == image::TRANSPARENCY_ALPHA_CHANNEL) {
-        this->buffer_[pos + 3] = color.w;
+        this->decode_buffer_[pos + 3] = color.w;
       }
       break;
     }
@@ -598,6 +586,65 @@ bool ArtworkImage::create_decoder_(ImageFormat format, size_t total_size) {
   return true;
 }
 
+void ArtworkImage::discard_decode_buffer_() {
+  if (this->decode_buffer_) {
+    this->allocator_.deallocate(this->decode_buffer_, this->get_decode_buffer_size_());
+    this->decode_buffer_ = nullptr;
+  }
+  this->decode_buffer_width_ = 0;
+  this->decode_buffer_height_ = 0;
+}
+
+void ArtworkImage::promote_decode_buffer_() {
+  if (!this->decode_buffer_) {
+    ESP_LOGE(TAG, "Decode finished without a decoded image buffer");
+    return;
+  }
+
+  this->retire_active_buffer_();
+  this->buffer_ = this->decode_buffer_;
+  this->buffer_width_ = this->decode_buffer_width_;
+  this->buffer_height_ = this->decode_buffer_height_;
+  this->decode_buffer_ = nullptr;
+  this->decode_buffer_width_ = 0;
+  this->decode_buffer_height_ = 0;
+
+  this->data_start_ = this->buffer_;
+  this->width_ = this->buffer_width_;
+  this->height_ = this->buffer_height_;
+#ifdef USE_LVGL
+  memset(&this->dsc_, 0, sizeof(this->dsc_));
+#endif
+}
+
+void ArtworkImage::retire_active_buffer_() {
+  if (!this->buffer_) {
+    return;
+  }
+  this->retired_buffers_.push_back(RetiredBuffer{this->buffer_, this->get_buffer_size_(), millis()});
+  this->buffer_ = nullptr;
+  this->data_start_ = nullptr;
+  this->buffer_width_ = 0;
+  this->buffer_height_ = 0;
+  this->width_ = 0;
+  this->height_ = 0;
+  this->cleanup_retired_buffers_(false);
+}
+
+void ArtworkImage::cleanup_retired_buffers_(bool force) {
+  uint32_t now = millis();
+  auto it = this->retired_buffers_.begin();
+  while (it != this->retired_buffers_.end()) {
+    if (force || now - it->retired_at >= RETIRED_BUFFER_GRACE_MS ||
+        this->retired_buffers_.size() > MAX_RETIRED_BUFFERS) {
+      this->allocator_.deallocate(it->data, it->size);
+      it = this->retired_buffers_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void ArtworkImage::queue_pending_update_(const std::string &url) {
   if (!this->validate_url_(url)) {
     return;
@@ -632,9 +679,10 @@ void ArtworkImage::log_state_(const char *stage) {
   size_t bytes_read = this->downloader_ ? this->downloader_->get_bytes_read() : 0;
   size_t content_length = this->downloader_ ? this->downloader_->content_length : 0;
   ESP_LOGD(TAG,
-           "State %-24s url_len=%zu http=%zu/%zu dl_buf=%zu/%zu image=%dx%d heap_free=%zu heap_largest=%zu pending=%s",
+           "State %-24s url_len=%zu http=%zu/%zu dl_buf=%zu/%zu image=%dx%d decode=%dx%d retired=%zu heap_free=%zu heap_largest=%zu pending=%s",
            stage, this->url_.size(), bytes_read, content_length, this->download_buffer_.unread(),
-           this->download_buffer_.size(), this->buffer_width_, this->buffer_height_, heap_free, heap_largest,
+           this->download_buffer_.size(), this->buffer_width_, this->buffer_height_, this->decode_buffer_width_,
+           this->decode_buffer_height_, this->retired_buffers_.size(), heap_free, heap_largest,
            this->update_pending_ ? "yes" : "no");
 }
 
@@ -644,6 +692,7 @@ void ArtworkImage::end_connection_() {
     this->downloader_ = nullptr;
   }
   this->decoder_.reset();
+  this->discard_decode_buffer_();
   this->download_buffer_.reset();
 }
 

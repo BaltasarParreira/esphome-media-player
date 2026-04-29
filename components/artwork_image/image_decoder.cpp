@@ -14,8 +14,8 @@ bool ImageDecoder::set_size(int width, int height) {
     this->failed_ = true;
     return false;
   }
-  this->x_scale_ = static_cast<double>(this->image_->buffer_width_) / width;
-  this->y_scale_ = static_cast<double>(this->image_->buffer_height_) / height;
+  this->x_scale_ = static_cast<double>(this->image_->decode_buffer_width_) / width;
+  this->y_scale_ = static_cast<double>(this->image_->decode_buffer_height_) / height;
   return success;
 }
 
@@ -23,8 +23,8 @@ void ImageDecoder::draw(int x, int y, int w, int h, const Color &color) {
   if (this->failed_) {
     return;
   }
-  auto width = std::min(this->image_->buffer_width_, static_cast<int>(std::ceil((x + w) * this->x_scale_)));
-  auto height = std::min(this->image_->buffer_height_, static_cast<int>(std::ceil((y + h) * this->y_scale_)));
+  auto width = std::min(this->image_->decode_buffer_width_, static_cast<int>(std::ceil((x + w) * this->x_scale_)));
+  auto height = std::min(this->image_->decode_buffer_height_, static_cast<int>(std::ceil((y + h) * this->y_scale_)));
   for (int i = x * this->x_scale_; i < width; i++) {
     for (int j = y * this->y_scale_; j < height; j++) {
       this->image_->draw_pixel_(i, j, color);
@@ -41,16 +41,16 @@ void ImageDecoder::draw_rgb565_block(int x, int y, int w, int h, const uint8_t *
   if (this->x_scale_ == 1.0 && this->y_scale_ == 1.0 && bpp_bytes == 2) {
     for (int row = 0; row < h; row++) {
       int dy = y + row;
-      if (dy < 0 || dy >= this->image_->buffer_height_)
+      if (dy < 0 || dy >= this->image_->decode_buffer_height_)
         continue;
       int start_x = std::max(0, x);
-      int end_x = std::min(x + w, this->image_->buffer_width_);
+      int end_x = std::min(x + w, this->image_->decode_buffer_width_);
       if (start_x >= end_x)
         continue;
       int copy_w = end_x - start_x;
       int src_offset = (row * w + (start_x - x)) * 2;
       int dst_pos = this->image_->get_position_(start_x, dy);
-      memcpy(this->image_->buffer_ + dst_pos, data + src_offset, copy_w * 2);
+      memcpy(this->image_->decode_buffer_ + dst_pos, data + src_offset, copy_w * 2);
     }
     return;
   }
@@ -61,16 +61,16 @@ void ImageDecoder::draw_rgb565_block(int x, int y, int w, int h, const uint8_t *
       int src_y = y + row;
       int src_offset = (row * w + col) * 2;
 
-      auto target_w = std::min(this->image_->buffer_width_,
+      auto target_w = std::min(this->image_->decode_buffer_width_,
                                static_cast<int>(std::ceil((src_x + 1) * this->x_scale_)));
-      auto target_h = std::min(this->image_->buffer_height_,
+      auto target_h = std::min(this->image_->decode_buffer_height_,
                                static_cast<int>(std::ceil((src_y + 1) * this->y_scale_)));
       for (int dy = static_cast<int>(src_y * this->y_scale_); dy < target_h; dy++) {
         for (int dx = static_cast<int>(src_x * this->x_scale_); dx < target_w; dx++) {
           int dst_pos = this->image_->get_position_(dx, dy);
-          memcpy(this->image_->buffer_ + dst_pos, data + src_offset, 2);
+          memcpy(this->image_->decode_buffer_ + dst_pos, data + src_offset, 2);
           if (bpp_bytes > 2) {
-            this->image_->buffer_[dst_pos + 2] = 0xFF;
+            this->image_->decode_buffer_[dst_pos + 2] = 0xFF;
           }
         }
       }
