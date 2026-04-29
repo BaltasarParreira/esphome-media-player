@@ -170,7 +170,7 @@ number:
     name: "Screen Saver: Paused Dimming"
     id: backlight_dim_timeout
     min_value: 1
-    max_value: 300
+    max_value: 600
     step: 1
     initial_value: 60
     optimistic: true

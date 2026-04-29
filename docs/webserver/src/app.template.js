@@ -102,7 +102,7 @@
     night_active_brightness: { min: 5, max: 100, step: 5, suffix: "%" },
     day_dim_brightness: { min: 0, max: 100, step: 5, suffix: "%" },
     night_dim_brightness: { min: 0, max: 100, step: 5, suffix: "%" },
-    dim_timeout: { min: 1, max: 300, step: 1, suffix: "s" },
+    dim_timeout: { min: 1, max: 600, step: 1, suffix: "s" },
     screen_saver_timeout: { min: 1, max: 1800, step: 1, suffix: "s" },
     day_clock_brightness: { min: 1, max: 100, step: 1, suffix: "%" },
     evening_clock_brightness: { min: 1, max: 100, step: 1, suffix: "%" },
@@ -395,7 +395,7 @@
       details.style.display = enabled ? "" : "none";
       badge.className = "on-badge" + (enabled ? " active" : "");
     }));
-    details.appendChild(numberField("Dim After", "dim_timeout"));
+    details.appendChild(durationSelectField("Dim After", "dim_timeout", [5, 10, 30, 60, 120, 300, 600]));
     details.appendChild(rangeField("Day Dimmed Brightness", "day_dim_brightness"));
     details.appendChild(rangeField("Night Dimmed Brightness", "night_dim_brightness"));
     body.appendChild(details);
