@@ -9,7 +9,7 @@
 
   var fonts = document.createElement("link");
   fonts.rel = "stylesheet";
-  fonts.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
+  fonts.href = "https://fonts.googleapis.com/css2?family=Cookie&family=Inter:wght@400;500;600;700&display=swap";
   document.head.appendChild(fonts);
 
   var DEFAULT_SPEAKER_PANEL_TIMEOUT = 10;
@@ -298,6 +298,7 @@
     buildHeader(root);
     buildPage(root, "settings");
     buildPage(root, "device");
+    root.appendChild(buildSupportButton());
 
     var espApp = document.querySelector("esp-app");
     if (espApp) espApp.parentNode.insertBefore(root, espApp);
@@ -305,6 +306,17 @@
 
     els.root = root;
     switchTab("settings");
+  }
+
+  function buildSupportButton() {
+    var link = document.createElement("a");
+    link.className = "mp-support-btn";
+    link.href = "https://www.buymeacoffee.com/jtenniswood";
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.setAttribute("aria-label", "Buy me a coffee");
+    link.innerHTML = '<svg viewBox="0 0 28 28" aria-hidden="true" focusable="false"><path fill="#000" d="M7.2 4.5h12.9c1.1 0 1.9.9 1.8 2l-.9 11.7c-.2 2.3-2.1 4.1-4.4 4.1H10.7c-2.3 0-4.2-1.8-4.4-4.1L5.4 6.5c-.1-1.1.8-2 1.8-2Z"/><path fill="#ffdd00" d="M8 7.1h11.2l-.8 10.7c-.1 1-1 1.8-2 1.8h-5.5c-1 0-1.9-.8-2-1.8L8 7.1Z"/><path fill="#000" d="M21.6 8.6h1.2c2.1 0 3.8 1.7 3.8 3.8s-1.7 3.8-3.8 3.8h-1.7l.2-2.3h1.5c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5h-1.4l.2-2.3ZM10.6 1.9c.5-.4 1.2-.3 1.6.2.9 1.2.7 2.5-.1 3.4-.4.5-1.1.5-1.6.1-.5-.4-.5-1.1-.1-1.6.2-.3.3-.5 0-1-.4-.5-.3-1.2.2-1.6ZM15.2 1.9c.5-.4 1.2-.3 1.6.2.9 1.2.7 2.5-.1 3.4-.4.5-1.1.5-1.6.1-.5-.4-.5-1.1-.1-1.6.2-.3.3-.5 0-1-.4-.5-.3-1.2.2-1.6Z"/></svg><span>Buy me a coffee</span>';
+    return link;
   }
 
   function buildHeader(parent) {
