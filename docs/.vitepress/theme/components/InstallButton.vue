@@ -28,10 +28,6 @@
         <span class="device-copy">
           <span class="device-name">{{ availableDevice.size }}</span>
           <span class="device-meta">{{ availableDevice.label }} - {{ availableDevice.resolution }}</span>
-          <span class="device-tags">
-            <span>{{ availableDevice.orientation }}</span>
-            <span>{{ availableDevice.layout }}</span>
-          </span>
         </span>
         <span class="device-check" aria-hidden="true"></span>
       </button>
@@ -69,8 +65,6 @@ const allDevices = [
     label: 'JC8012P4A1',
     size: '10.1 in',
     resolution: '1280 x 800',
-    orientation: 'Landscape',
-    layout: 'Side-panel layout',
     slots: 20,
     cols: 5,
     rows: 4,
@@ -83,8 +77,6 @@ const allDevices = [
     label: 'P4 86 Panel',
     size: '4 in',
     resolution: '720 x 720',
-    orientation: 'Square',
-    layout: 'Full-screen layout',
     slots: 9,
     cols: 3,
     rows: 3,
@@ -97,8 +89,6 @@ const allDevices = [
     label: 'JC4880P443',
     size: '4.3 in',
     resolution: '480 x 800',
-    orientation: 'Portrait',
-    layout: 'Portrait layout',
     slots: 6,
     cols: 2,
     rows: 3,
@@ -111,8 +101,6 @@ const allDevices = [
     label: '4848S040',
     size: '4 in',
     resolution: '480 x 480',
-    orientation: 'Square',
-    layout: 'Full-screen layout',
     slots: 9,
     cols: 3,
     rows: 3,
@@ -281,21 +269,6 @@ watch(selected, async () => {
   color: var(--vp-c-text-2);
   font-size: 13px;
   line-height: 1.3;
-}
-
-.device-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  color: var(--vp-c-text-2);
-  font-size: 12px;
-}
-
-.device-tags span {
-  padding: 2px 7px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 999px;
-  background: var(--vp-c-bg);
 }
 
 .device-check {
