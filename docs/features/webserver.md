@@ -8,14 +8,30 @@ You can also open the same page from Home Assistant by going to **Settings -> De
 
 The webserver is the main setup page for current firmware. It lets you choose the Home Assistant media player to control, tune the screen behaviour, and manage firmware updates from your browser.
 
-Common setup tasks include:
+The page is split across two tabs:
 
-- Selecting the main `media_player` entity.
-- Setting an optional linked media player for TV or Line-in sources.
-- Adjusting brightness, dimming, screen saver, and night schedule behaviour.
-- Choosing timezone and day/night detection.
-- Checking for firmware updates or changing automatic update behaviour.
-- Changing screen rotation on supported ESP32-P4 panels.
+### Settings tab
+
+Use this tab for the main setup and day-to-day display behaviour:
+
+- **Media Player** — choose the main Home Assistant `media_player` entity the touchscreen controls.
+- **Advanced** — set an optional linked media player for TV or Line-in sources.
+- **Playback** — change track time display, progress bar visibility, and supported track info timing.
+- **Volume** — control whether the speaker panel closes automatically after a short delay.
+- **Idle Screen** — dim the display after playback pauses.
+- **Screen Saver** — choose what happens after the device has been idle for longer.
+- **Night Schedule** — set overnight screen-off behaviour and temporary wake timing.
+
+### Device tab
+
+Use this tab for device-wide options and maintenance:
+
+- **Clock** — choose the timezone used by the on-screen clock and schedules.
+- **Day/Night** — optionally provide a Home Assistant entity to control day and night mode.
+- **Screen Brightness** — set active daytime and night-time brightness.
+- **Screen Tone** — adjust warm tinting for album art on ESP32-P4 devices.
+- **Rotation** — change screen rotation on supported ESP32-P4 panels.
+- **Firmware** — check for updates, install an available update, and change automatic update behaviour.
 
 See [Settings](/features/settings) for the full list of controls.
 
