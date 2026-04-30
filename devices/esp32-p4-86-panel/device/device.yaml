@@ -176,19 +176,17 @@ esp_ldo:
 # -----------------------------------------------------------------------------
 # BACKLIGHT CONTROL
 # -----------------------------------------------------------------------------
-# The display backlight is controlled via PWM (pulse width modulation).
-# This panel's usable PWM range is roughly 70-100%. Below 70% the
-# backlight appears black, so map user-facing brightness into that range
-# while still allowing true off when the light is turned off.
+# This panel has a Waveshare I2C backlight controller at address 0x45.
+# Brightness is written to register 0x96 as 0x00-0xFF, giving the web
+# brightness sliders the full dim-to-bright range.
 # This output is used by the backlight component in addon/backlight.yaml
 # -----------------------------------------------------------------------------
 output:
-  - platform: ledc
+  - platform: waveshare_backlight
     id: backlight_output
-    pin: GPIO26
-    inverted: true
-    min_power: 0.70
-    zero_means_zero: true
+    enable_pin:
+      number: GPIO26
+      inverted: true
 
 
 # -----------------------------------------------------------------------------
