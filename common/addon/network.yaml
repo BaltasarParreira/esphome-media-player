@@ -13,14 +13,17 @@ globals:
 wifi:
   on_connect:
     - delay: 800ms
+    - script.execute: update_setup_ip_label
     - lvgl.widget.hide: loading_screen
     - lvgl.widget.hide: wifi_setup_prompt
+    - lvgl.widget.hide: ha_setup_prompt
     - if:
         condition:
           lambda: 'return !id(device_has_been_setup) && !id(boot_grace_period);'
         then:
-          - lvgl.widget.show: ha_setup_prompt
+          - lvgl.widget.show: setup_prompt
   on_disconnect:
+    - lvgl.widget.hide: setup_prompt
     - if:
         condition:
           lambda: 'return !id(device_has_been_setup) && !id(boot_grace_period);'
@@ -60,7 +63,21 @@ esphome:
                     return esphome::api::global_api_server == nullptr
                         || !esphome::api::global_api_server->is_connected();
             then:
-              - lvgl.widget.show: ha_setup_prompt
+              - script.execute: update_setup_ip_label
+              - lvgl.widget.show: setup_prompt
+
+script:
+  - id: update_setup_ip_label
+    mode: restart
+    then:
+      - lambda: |-
+          auto ips = wifi::global_wifi_component->get_ip_addresses();
+          if (!ips.empty()) {
+            char ip_buf[esphome::network::IP_ADDRESS_BUFFER_SIZE];
+            ips[0].str_to(ip_buf);
+            std::string url = "http://" + std::string(ip_buf);
+            lv_label_set_text(id(setup_ip_label), url.c_str());
+          }
 
 # Online Status
 binary_sensor:

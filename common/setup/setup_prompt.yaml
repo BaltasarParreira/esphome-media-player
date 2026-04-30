@@ -43,9 +43,16 @@ obj:
               width: ${setup_content_width}
               text_align: center
           - label:
-              text: "Set the media player entity\nyou want to control in\ndevice settings"
+              text: "Visit this address in your browser\nto choose a media player"
               text_font: roboto30_font
               text_color: 0x888888
               width: ${setup_content_width}
               text_align: center
               pad_top: ${setup_instructions_pad_top}
+          - label:
+              id: setup_ip_label
+              text: "http://..."
+              text_font: roboto_light40_font
+              text_color: 0xFFFFFF
+              width: ${setup_content_width}
+              text_align: center
