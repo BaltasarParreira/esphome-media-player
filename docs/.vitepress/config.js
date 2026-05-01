@@ -7,6 +7,9 @@ export default {
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/esphome-media-player/favicon.svg' }],
   ],
   themeConfig: {
+    search: {
+      provider: 'local',
+    },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/jtenniswood/esphome-media-player' },
     ],
