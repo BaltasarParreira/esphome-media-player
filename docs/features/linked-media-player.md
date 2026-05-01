@@ -1,3 +1,8 @@
+---
+title: Linked Media Player for TV and Line-In Sources
+description: Configure ESPHome Media Player to show Home Assistant now-playing details from a linked TV, line-in, Apple TV, or Chromecast media player.
+---
+
 # Source Inputs
 
 ![TV Source](../images/guition-esp32-p4-jc8012p4a1-tvsource.jpg)

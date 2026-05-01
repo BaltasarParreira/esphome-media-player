@@ -1,3 +1,8 @@
+---
+title: Home Assistant Speaker Grouping
+description: Set up speaker grouping for ESPHome Media Player so the touchscreen can group and ungroup Home Assistant media players.
+---
+
 # Speaker Grouping
 
 Control multi-room speaker groups directly from the touchscreen panel. The settings panel (swipe down) shows a speaker list on the right side where you can add or remove speakers from the group and adjust individual volumes.

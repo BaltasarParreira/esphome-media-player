@@ -1,14 +1,19 @@
-# Getting Started
+---
+title: ESPHome Media Player for Home Assistant
+description: Build a Home Assistant touchscreen media controller with ESPHome, album art, playback controls, speaker grouping, and browser-based firmware installation.
+---
+
+# ESPHome Media Player for Home Assistant
 
 A touchscreen media controller for Home Assistant: album art, track info, and touch controls for any media player in your smart home. Built with [ESPHome](https://esphome.io/) and [LVGL](https://lvgl.io/).
 
-![Guition ESP32-P4 JC8012P4A1](./images/guition-esp32-p4-jc8012p4a1-example1.jpg)
+![Guition ESP32-P4 JC8012P4A1 touchscreen media controller showing album art](./images/guition-esp32-p4-jc8012p4a1-example1.jpg)
 
 [Guition ESP32-P4 JC8012P4A1 (10.1")](/devices/esp32-p4-jc8012p4a1)
 
-![Guition ESP32-S3 4848S040](./images/guition-esp32-s3-4848s040-example1.jpg)
+![Guition ESP32-S3 4848S040 touchscreen media controller showing album art](./images/guition-esp32-s3-4848s040-example1.jpg)
 
-![Guition ESP32-S3 4848S040](./images/guition-esp32-s3-4848s040-example2.jpg)
+![Guition ESP32-S3 4848S040 touchscreen media controller with playback controls](./images/guition-esp32-s3-4848s040-example2.jpg)
 
 [Guition ESP32-S3 4848S040 (4")](/devices/esp32-s3-4848s040)
 

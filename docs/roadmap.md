@@ -1,3 +1,8 @@
+---
+title: ESPHome Media Player Roadmap
+description: See planned ESPHome Media Player features, including media browsing and Home Assistant lighting control ideas.
+---
+
 # Roadmap
 
 A high-level look at what's planned for ESPHome Media Player. This is a living document — features may shift in priority as the project evolves.

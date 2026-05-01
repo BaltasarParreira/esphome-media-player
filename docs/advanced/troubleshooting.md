@@ -1,3 +1,8 @@
+---
+title: ESPHome Media Player Troubleshooting
+description: Fix common ESPHome Media Player issues including missing album art, Wi-Fi setup problems, Home Assistant discovery, black screens, and media controls.
+---
+
 # Troubleshooting
 
 ## The artwork isn't loading

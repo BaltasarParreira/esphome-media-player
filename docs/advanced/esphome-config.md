@@ -1,3 +1,8 @@
+---
+title: Manual ESPHome Config
+description: Install ESPHome Media Player through the ESPHome dashboard with YAML packages, substitutions, Wi-Fi setup, and supported device examples.
+---
+
 # ESPHome Config
 
 Install the media player firmware via the ESPHome dashboard instead of the web installer. This gives you full control over substitutions and lets you customise behaviour that the web installer leaves at defaults.

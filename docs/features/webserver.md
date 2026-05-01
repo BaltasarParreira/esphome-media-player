@@ -1,3 +1,8 @@
+---
+title: Web Settings for ESPHome Media Player
+description: Configure ESPHome Media Player from the device web settings page, including Home Assistant media player selection, brightness, screen saver, and updates.
+---
+
 # Web Settings
 
 The firmware includes a built-in local-only web settings page for basic setup and advanced customization. After the device is on your Wi-Fi network, open the device IP address in a browser on the same network to choose what it controls, tune the display, and adjust behaviour without editing YAML or reflashing.

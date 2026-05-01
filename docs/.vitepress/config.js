@@ -1,11 +1,46 @@
+const siteUrl = 'https://jtenniswood.github.io'
+const base = '/esphome-media-player/'
+const siteName = 'ESPHome Media Player'
+const siteDescription = 'A Home Assistant media controller for ESP32 touchscreen displays, built with ESPHome and LVGL.'
+const socialImage = 'https://raw.githubusercontent.com/jtenniswood/esphome-media-player/main/docs/images/guition-esp32-p4-jc8012p4a1-example1.jpg'
+
+function canonicalUrl(page) {
+  const path = page
+    .replace(/(^|\/)index\.md$/, '$1')
+    .replace(/\.md$/, '.html')
+
+  return new URL(`${base}${path}`, siteUrl).toString()
+}
+
 export default {
-  base: '/esphome-media-player/',
-  title: 'EspMedia',
-  description: 'A media controller for Home Assistant',
+  base,
+  title: siteName,
+  description: siteDescription,
   ignoreDeadLinks: true,
+  sitemap: {
+    hostname: `${siteUrl}${base}`,
+  },
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/esphome-media-player/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
+    ['meta', { name: 'theme-color', content: '#0f172a' }],
   ],
+  transformHead({ page, title, description }) {
+    const url = canonicalUrl(page)
+
+    return [
+      ['link', { rel: 'canonical', href: url }],
+      ['meta', { property: 'og:type', content: 'website' }],
+      ['meta', { property: 'og:site_name', content: siteName }],
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { property: 'og:url', content: url }],
+      ['meta', { property: 'og:image', content: socialImage }],
+      ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+      ['meta', { name: 'twitter:title', content: title }],
+      ['meta', { name: 'twitter:description', content: description }],
+      ['meta', { name: 'twitter:image', content: socialImage }],
+    ]
+  },
   themeConfig: {
     search: {
       provider: 'local',

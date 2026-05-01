@@ -1,3 +1,8 @@
+---
+title: ESPHome Media Player Display Rotation
+description: Rotate supported ESPHome Media Player touchscreen displays and touch input for different mounting orientations.
+---
+
 # Display Rotation
 
 Supported devices can rotate the display for different mounting orientations (for example to change which side the power cable exits from). Set `display_rotation` to rotate both the screen and touch input.

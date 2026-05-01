@@ -1,3 +1,8 @@
+---
+title: Home Assistant Host and Port Setup
+description: Configure Home Assistant protocol, host, port, and SSL options so ESPHome Media Player can load album artwork correctly.
+---
+
 # Host/Port Setup
 
 By default the device constructs artwork URLs using `http://homeassistant.local:8123`. If your Home Assistant instance uses HTTPS, a different hostname/IP, or a non-standard port, album art will fail to load.

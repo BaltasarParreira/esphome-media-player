@@ -1,3 +1,8 @@
+---
+title: Report an ESPHome Media Player Issue
+description: Learn what details, logs, screenshots, and setup information to include when opening an ESPHome Media Player support issue.
+---
+
 # Raising an Issue
 
 If you've gone through [Troubleshooting](/advanced/troubleshooting) and still need help, open an issue on GitHub.

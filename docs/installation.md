@@ -1,3 +1,8 @@
+---
+title: Install ESPHome Media Player
+description: Flash ESPHome Media Player firmware to supported ESP32 touchscreen displays from your browser, then connect it to Wi-Fi and Home Assistant.
+---
+
 # Installation
 
 Flash ESPHome Media Player firmware to your ESP32 display directly from your browser. No ESPHome dashboard, YAML editing, or special flashing software required.

@@ -1,3 +1,8 @@
+---
+title: ESPHome Media Player Screen Saver
+description: Configure ESPHome Media Player screen saver behavior, including idle dimming, clock mode, screen-off scheduling, and day/night brightness.
+---
+
 # Screen Saver
 
 When playback is paused and paused dimming is enabled, the device uses a two-stage screen saver to reduce power consumption and prevent burn-in. All settings are configurable from the device's web settings page. You can open it by visiting the device IP address directly in your browser, or from the device in Home Assistant under **Settings → Devices & Services → ESPHome** by clicking **Visit**.

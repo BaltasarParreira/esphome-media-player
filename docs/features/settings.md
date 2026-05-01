@@ -1,3 +1,8 @@
+---
+title: ESPHome Media Player Settings
+description: Reference the ESPHome Media Player web settings for media player selection, brightness, idle dimming, screen saver, rotation, and firmware updates.
+---
+
 # Settings
 
 Most settings are configurable from the device's built-in web settings page — no YAML or reflashing needed. See [Web Settings](/features/webserver) for how to open it, or go to the device in Home Assistant under **Settings → Devices & Services → ESPHome** and click **Visit**.
