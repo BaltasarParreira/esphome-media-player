@@ -238,7 +238,7 @@ output:
       number: 2
       mode:
         output: true
-      inverted: false	
+      inverted: false
 
 
 # -----------------------------------------------------------------------------
@@ -347,7 +347,7 @@ globals:
 #    display: tft_display
 #    i2c_id: i2c_bus
 #    reset_pin: GPIO3
-	
+
 ### Touchscreen
 touchscreen:
   platform: gt911
@@ -357,8 +357,8 @@ touchscreen:
     ch422g: ch422g_hub
     number: 1
     mode: OUTPUT
-	
-    on_touch:
+
+  on_touch:
       - lambda: |-
           id(was_screen_dimmed) = id(is_screen_dimmed);
           id(was_panel_open) = id(is_panel_open);
@@ -852,9 +852,8 @@ script:
 #    reset_pin: GPIO5
 #    color_order: RGB
 #    auto_clear_enabled: false
-	
-	
-### Display
+
+## Display
 display:
   - platform: mipi_rgb
     model: ESP32-S3-TOUCH-LCD-7-800X480
