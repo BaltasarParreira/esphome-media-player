@@ -14,18 +14,14 @@
 # PROCESSOR / BOARD
 # -----------------------------------------------------------------------------
 # Defines which ESP32 chip and development framework to use.
-# The ESP32-P4 uses an ESP32-C6 coprocessor for Wi-Fi/Bluetooth.
+# All for Waveshare 7"
 # -----------------------------------------------------------------------------
 esp32:
-  variant: ESP32P4
-  flash_size: 16MB
-  cpu_frequency: 360MHz
-  engineering_sample: true
+  variant: esp32s3
+  flash_size: 8MB
+  cpu_frequency: 240MHz
   framework:
     type: esp-idf
-    sdkconfig_options:
-      CONFIG_HTTPD_MAX_URI_LEN: "128"
-      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
     advanced:
       enable_idf_experimental_features: true
 
@@ -54,25 +50,29 @@ esphome:
           transition_length: 500ms
       - script.execute: backlight_wake_timeout
   platformio_options:
+    board_upload.maximum_ram_size: 524288   # --> Bal
     board_build.flash_mode: dio
     build_flags:
       - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
       - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
       - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
       - "-Wno-deprecated-declarations"
+  min_version: "2025.8.0"
+
+
 
 
 # ESP32-C6 coprocessor for Wi-Fi and Bluetooth via SDIO
-esp32_hosted:
-  variant: ESP32C6
-  reset_pin: GPIO54
-  cmd_pin: GPIO19
-  clk_pin: GPIO18
-  d0_pin: GPIO14
-  d1_pin: GPIO15
-  d2_pin: GPIO16
-  d3_pin: GPIO17
-  active_high: true
+#esp32_hosted:
+#  variant: ESP32C6
+#  reset_pin: GPIO54
+#  cmd_pin: GPIO19
+#  clk_pin: GPIO18
+#  d0_pin: GPIO14
+#  d1_pin: GPIO15
+#  d2_pin: GPIO16
+#  d3_pin: GPIO17
+#  active_high: true
 
 
 # -----------------------------------------------------------------------------
@@ -198,10 +198,12 @@ logger:
 # - speed: 200MHz clock speed for memory access
 #
 # Without this, the display won't have enough memory for the framebuffer.
+# --->  Bal
 # -----------------------------------------------------------------------------
 psram:
-  mode: hex
-  speed: 200MHz
+  mode: octal
+  speed: 120MHz
+
 
 
 # MIPI DSI PHY power rail.
@@ -220,10 +222,23 @@ esp_ldo:
 #
 # This output is used by the backlight component in addon/backlight.yaml
 # -----------------------------------------------------------------------------
+#output:
+#  - platform: ledc
+#    id: backlight_output
+#    pin: GPIO23
+
+ch422g:
+  - id: ch422g_hub
+
 output:
-  - platform: ledc
-    id: backlight_output
-    pin: GPIO23
+  - platform: gpio
+    id: lcdbacklight_output
+    pin:
+      ch422g: ch422g_hub
+      number: 2
+      mode:
+        output: true
+      inverted: false	
 
 
 # -----------------------------------------------------------------------------
@@ -326,12 +341,23 @@ globals:
 # Swipe detection: on_touch stores start position, on_update tracks the
 # finger as it moves, on_release evaluates whether the gesture was a swipe.
 # -----------------------------------------------------------------------------
+#touchscreen:
+#  - platform: gt911
+#    id: tft_touch
+#    display: tft_display
+#    i2c_id: i2c_bus
+#    reset_pin: GPIO3
+	
+### Touchscreen
 touchscreen:
-  - platform: gt911
-    id: tft_touch
-    display: tft_display
-    i2c_id: i2c_bus
-    reset_pin: GPIO3
+  platform: gt911
+  id: waveshare_touch
+  interrupt_pin: GPIO4
+  reset_pin:
+    ch422g: ch422g_hub
+    number: 1
+    mode: OUTPUT
+	
     on_touch:
       - lambda: |-
           id(was_screen_dimmed) = id(is_screen_dimmed);
@@ -818,11 +844,64 @@ script:
       - logger.log: "Exited linked media player mode"
 
 
-
+#  --> Bal
+#display:
+#  - platform: mipi_dsi
+#    model: JC4880P443
+#    id: tft_display
+#    reset_pin: GPIO5
+#    color_order: RGB
+#    auto_clear_enabled: false
+	
+	
+### Display
 display:
-  - platform: mipi_dsi
-    model: JC4880P443
-    id: tft_display
-    reset_pin: GPIO5
-    color_order: RGB
+  - platform: mipi_rgb
+    model: ESP32-S3-TOUCH-LCD-7-800X480
+    id: waveshare_display
+    update_interval: never
     auto_clear_enabled: false
+    color_order: RGB
+    pclk_frequency: 16MHZ
+    dimensions:
+      width: 800
+      height: 480
+    de_pin:
+      number: 5
+    hsync_pin:
+      number: 46
+      ignore_strapping_warning: true
+    vsync_pin:
+      number: 3
+      ignore_strapping_warning: true
+    pclk_pin: 7
+    pclk_inverted: true
+    reset_pin:
+      ch422g: ch422g_hub
+      number: 3
+    hsync_back_porch: 8
+    hsync_front_porch: 8
+    hsync_pulse_width: 4
+    vsync_back_porch: 16
+    vsync_front_porch: 16
+    vsync_pulse_width: 4
+    data_pins:
+      red:
+        - 1         #r3
+        - 2         #r4
+        - 42        #r5
+        - 41        #r6
+        - 40        #r7
+      blue:
+        - 14        #b3
+        - 38        #b4
+        - 18        #b5
+        - 17        #b6
+        - 10        #b7
+      green:
+        - 39        #g2
+        - 0         #g3
+        - 45        #g4
+        - 48        #g5
+        - 47        #g6
+        - 21        #g7
