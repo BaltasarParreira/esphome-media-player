@@ -232,7 +232,7 @@ ch422g:
 
 output:
   - platform: gpio
-    id: lcdbacklight_output
+    id: backlight_output
     pin:
       ch422g: ch422g_hub
       number: 2
@@ -859,7 +859,7 @@ script:
 display:
   - platform: mipi_rgb
     model: ESP32-S3-TOUCH-LCD-7-800X480
-    id: waveshare_display
+    id: tft_display
     update_interval: never
     auto_clear_enabled: false
     color_order: RGB
