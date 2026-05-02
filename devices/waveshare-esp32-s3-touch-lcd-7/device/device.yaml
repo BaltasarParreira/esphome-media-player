@@ -351,8 +351,9 @@ globals:
 ### Touchscreen
 touchscreen:
   - platform: gt911
-    id: waveshare_touch
-    interrupt_pin: GPIO4
+    id: tft_touch
+    display: tft_display
+    i2c_id: i2c_bus
     reset_pin:
         ch422g: ch422g_hub
         number: 1
