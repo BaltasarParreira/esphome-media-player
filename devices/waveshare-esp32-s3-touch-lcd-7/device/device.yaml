@@ -222,17 +222,17 @@ psram:
 #
 # This output is used by the backlight component in addon/backlight.yaml
 # -----------------------------------------------------------------------------
-#output:
-#  - platform: ledc
-#    id: backlight_output
-#    pin: GPIO23
+output:
+  - platform: ledc
+    id: backlight_output
+    pin: GPIO23
 
 ch422g:
   - id: ch422g_hub
 
 output:
   - platform: gpio
-    id: backlight_output
+    id: backlight_output_ws
     pin:
       ch422g: ch422g_hub
       number: 2
