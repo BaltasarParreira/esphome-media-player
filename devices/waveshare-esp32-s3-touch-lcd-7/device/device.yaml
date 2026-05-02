@@ -350,13 +350,13 @@ globals:
 
 ### Touchscreen
 touchscreen:
-  platform: gt911
-  id: waveshare_touch
-  interrupt_pin: GPIO4
-  reset_pin:
-    ch422g: ch422g_hub
-    number: 1
-    mode: OUTPUT
+  - platform: gt911
+    id: waveshare_touch
+    interrupt_pin: GPIO4
+    reset_pin:
+        ch422g: ch422g_hub
+        number: 1
+        mode: OUTPUT
 
   on_touch:
       - lambda: |-
