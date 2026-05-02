@@ -879,7 +879,7 @@ display:
     id: tft_display
     update_interval: never
     auto_clear_enabled: false
-    color_order: RGB
+    color_order: RGB565
     pclk_frequency: 16MHZ
     dimensions:
       width: 800
