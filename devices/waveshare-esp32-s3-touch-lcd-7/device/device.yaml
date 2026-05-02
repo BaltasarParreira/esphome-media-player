@@ -226,11 +226,6 @@ output:
   - platform: ledc
     id: backlight_output
     pin: GPIO23
-
-ch422g:
-  - id: ch422g_hub
-
-output:
   - platform: gpio
     id: backlight_output_ws
     pin:
@@ -240,6 +235,8 @@ output:
         output: true
       inverted: false
 
+ch422g:
+  - id: ch422g_hub
 
 # -----------------------------------------------------------------------------
 # I2C BUS (Touchscreen Communication)
