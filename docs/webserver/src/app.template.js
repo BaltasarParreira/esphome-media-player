@@ -23,6 +23,8 @@
   var SPEAKER_PANEL_TIMEOUT_OPTIONS = [5, 10, 20, 30, 60];
   var S3_DEVICE_PROFILE = "guition-esp32-s3-4848s040";
   var WEB_ACTIVITY_HEARTBEAT_MS = 10000;
+  var FIRMWARE_INSTALL_REFRESH_MS = 5000;
+  var FIRMWARE_INSTALL_REFRESH_TIMEOUT_MS = 300000;
 
   var S = {
     media_player: "",
@@ -139,6 +141,8 @@
   var webActivityTimer = null;
   var webActivityStarted = false;
   var webActivityClosed = false;
+  var firmwareInstallRefreshTimer = null;
+  var firmwareInstallRefreshStarted = 0;
 
   function eid(domain, name) {
     return "/" + domain + "/" + encodeURIComponent(name);
@@ -168,7 +172,7 @@
   }
 
   function safeGet(url) {
-    return fetch(url)
+    return fetch(url, { cache: "no-store" })
       .then(function (r) {
         if (!r.ok) return null;
         return r.json();
@@ -299,11 +303,38 @@
     if (spec.optionsKey) url += "?detail=all";
     return safeGet(url).then(function (data) {
       if (data) applyEntityToState(key, data);
+      return data;
     });
   }
 
   function fetchAllState() {
     return Promise.all(Object.keys(ENTITIES).map(fetchEntity));
+  }
+
+  function refreshFirmwareState() {
+    return fetchEntity("firmware_update").then(function (data) {
+      if (!data) return;
+      if (S.firmware_state !== "INSTALLING") stopFirmwareInstallRefresh();
+      scheduleRender();
+    });
+  }
+
+  function startFirmwareInstallRefresh() {
+    stopFirmwareInstallRefresh();
+    firmwareInstallRefreshStarted = Date.now();
+    firmwareInstallRefreshTimer = setInterval(function () {
+      if (Date.now() - firmwareInstallRefreshStarted > FIRMWARE_INSTALL_REFRESH_TIMEOUT_MS) {
+        stopFirmwareInstallRefresh();
+        return;
+      }
+      refreshFirmwareState();
+    }, FIRMWARE_INSTALL_REFRESH_MS);
+  }
+
+  function stopFirmwareInstallRefresh() {
+    if (!firmwareInstallRefreshTimer) return;
+    clearInterval(firmwareInstallRefreshTimer);
+    firmwareInstallRefreshTimer = null;
   }
 
   function buildUI() {
@@ -601,6 +632,7 @@
       if (firmwareUpdateAvailable()) {
         S.firmware_state = "INSTALLING";
         renderAll();
+        startFirmwareInstallRefresh();
         post(endpoint("firmware_update") + "/install");
         return;
       }
@@ -1211,6 +1243,9 @@
   function initSSE() {
     try {
       evtSource = new EventSource("/events");
+      evtSource.addEventListener("open", function () {
+        refreshFirmwareState();
+      });
       evtSource.addEventListener("state", function (e) {
         try {
           var data = JSON.parse(e.data);
