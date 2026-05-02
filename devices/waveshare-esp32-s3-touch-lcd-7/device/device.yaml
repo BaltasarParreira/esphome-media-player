@@ -14,12 +14,27 @@
 # PROCESSOR / BOARD
 # -----------------------------------------------------------------------------
 # Defines which ESP32 chip and development framework to use.
-# All for Waveshare 7"
+# The ESP32-P4 uses an ESP32-C6 coprocessor for Wi-Fi/Bluetooth.
 # -----------------------------------------------------------------------------
+#esp32:
+#  variant: ESP32P4
+#  flash_size: 16MB
+#  cpu_frequency: 360MHz
+#  engineering_sample: true
+#  framework:
+#    type: esp-idf
+#    sdkconfig_options:
+#      CONFIG_HTTPD_MAX_URI_LEN: "128"
+#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
+#    advanced:
+#      enable_idf_experimental_features: true
+
+## For waveshare 7"
 esp32:
   variant: esp32s3
   flash_size: 8MB
   cpu_frequency: 240MHz
+  engineering_sample: true
   framework:
     type: esp-idf
     advanced:
@@ -51,12 +66,12 @@ esphome:
       - script.execute: backlight_wake_timeout
   platformio_options:
     board_upload.maximum_ram_size: 524288   # --> Bal
-    board_build.flash_mode: dio
-    build_flags:
-      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
-      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
-      - "-Wno-deprecated-declarations"
+#    board_build.flash_mode: dio
+#    build_flags:
+#      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
+#      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
+#      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
+#      - "-Wno-deprecated-declarations"
   min_version: "2025.8.0"
 
 
