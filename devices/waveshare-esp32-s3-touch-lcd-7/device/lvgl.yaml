@@ -10,7 +10,7 @@
 lvgl:
   id: main_lvgl
   buffer_size: 12% # 25%  --> Bal
-  byte_order: RGB565 # little_endian  --> Bal
+  byte_order: little_endian
   rotation: ${display_rotation}
   log_level: none
   on_boot:
