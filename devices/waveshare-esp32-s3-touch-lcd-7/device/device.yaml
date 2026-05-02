@@ -360,7 +360,7 @@ touchscreen:
       number: 1
       mode: OUTPUT
 
-  on_touch:
+on_touch:
       - lambda: |-
           id(was_screen_dimmed) = id(is_screen_dimmed);
           id(was_panel_open) = id(is_panel_open);
@@ -372,7 +372,7 @@ touchscreen:
       - script.execute: backlight_wake_timeout
       - lambda: |-
           if (id(is_panel_open)) id(start_speaker_panel_timeout).execute();
-    on_update:
+on_update:
       - lambda: |-
           for (auto touch: touches) {
             if (touch.state <= 2) {
@@ -380,7 +380,7 @@ touchscreen:
               id(touch_y_end) = touch.y;
             }
           }
-    on_release:
+on_release:
       - lambda: |-
           int dx = id(touch_x_end) - id(touch_x_start);
           int dy = id(touch_y_end) - id(touch_y_start);
