@@ -346,7 +346,7 @@ globals:
 #    display: tft_display
 #    i2c_id: i2c_bus
 #    reset_pin: GPIO3
-	
+
 ### Touchscreen
 touchscreen:
   platform: gt911
@@ -356,7 +356,7 @@ touchscreen:
     ch422g: ch422g_hub
     number: 1
     mode: OUTPUT
-	
+
     on_touch:
       - lambda: |-
           id(was_screen_dimmed) = id(is_screen_dimmed);
@@ -851,8 +851,8 @@ script:
 #    reset_pin: GPIO5
 #    color_order: RGB
 #    auto_clear_enabled: false
-	
-	
+
+
 ### Display
 display:
   - platform: mipi_rgb
