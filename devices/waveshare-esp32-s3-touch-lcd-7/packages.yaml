@@ -57,7 +57,7 @@ esphome:
       - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
       - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
       - "-Wno-deprecated-declarations"
-  min_version: "2025.8.0"
+#  min_version: "2025.8.0"
 
 
 
