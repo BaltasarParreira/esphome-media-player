@@ -66,7 +66,7 @@ esphome:
           brightness: 100%
           transition_length: 500ms
       - script.execute: backlight_wake_timeout
-  platformio_options:
+#  platformio_options:
 #    board_upload.maximum_ram_size: 524288   # --> Bal
 #    board_build.flash_mode: qio
 #    build_flags:
