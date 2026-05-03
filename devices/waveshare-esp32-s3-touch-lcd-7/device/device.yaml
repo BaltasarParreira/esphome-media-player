@@ -36,6 +36,9 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
+    sdkconfig_options:
+      CONFIG_HTTPD_MAX_URI_LEN: "128"
+      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
     advanced:
       enable_idf_experimental_features: true
 
@@ -65,12 +68,12 @@ esphome:
       - script.execute: backlight_wake_timeout
   platformio_options:
     board_upload.maximum_ram_size: 524288   # --> Bal
-#    board_build.flash_mode: dio
-#    build_flags:
-#      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-#      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
-#      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
-#      - "-Wno-deprecated-declarations"
+    board_build.flash_mode: dio
+    build_flags:
+      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
+      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
+      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
+      - "-Wno-deprecated-declarations"
 #       - '-D CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM=8' # Default is 16
 #       - '-D CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM=16' # Default is 32
 #       - '-D CONFIG_ESP32_WIFI_TX_BUFFER_NUM=16' # Default is 32
@@ -273,6 +276,7 @@ i2c:
   sda: GPIO08
   scl: GPIO09
   scan: True
+  frequency: 400kHz
 
 
 # -----------------------------------------------------------------------------
