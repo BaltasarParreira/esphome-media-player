@@ -36,9 +36,9 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
-    sdkconfig_options:
-      CONFIG_HTTPD_MAX_URI_LEN: "128"
-      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
+#    sdkconfig_options:
+#      CONFIG_HTTPD_MAX_URI_LEN: "128"
+#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
     advanced:
       enable_idf_experimental_features: true
 
