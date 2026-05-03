@@ -879,16 +879,6 @@ script:
 ## Display
 display:
   - platform: mipi_rgb
-    lambda: |-
-      // Allocate a 100KB buffer in PSRAM
-      size_t size = 102400;
-      void* my_buffer = heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
-      
-      if (my_buffer != nullptr) {
-          ESP_LOGD("custom", "PSRAM allocation successful!");
-          // ... use buffer ...
-          free(my_buffer);
-      }
     model: ESP32-S3-TOUCH-LCD-7-800X480
     id: tft_display
     update_interval: never
