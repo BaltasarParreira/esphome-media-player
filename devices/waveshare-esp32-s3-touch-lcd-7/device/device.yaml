@@ -884,6 +884,7 @@ display:
     update_interval: never
     auto_clear_enabled: false
     color_order: RGB
+    invert_colors: true # --> Bal
     pclk_frequency: 16MHZ
     dimensions:
       width: 800
