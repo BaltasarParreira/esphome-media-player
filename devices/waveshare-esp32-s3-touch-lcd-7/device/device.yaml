@@ -36,8 +36,8 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
-#    sdkconfig_options:
-#      CONFIG_HTTPD_MAX_URI_LEN: "128"
+  sdkconfig_options:
+    CONFIG_HTTPD_MAX_URI_LEN: "512"
 #      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
     advanced:
       enable_idf_experimental_features: true
@@ -69,7 +69,8 @@ esphome:
   platformio_options:
     board_upload.maximum_ram_size: 524288   # --> Bal
     board_build.flash_mode: dio
-#    build_flags:
+    build_flags:
+    - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
 #      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
 #      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
 #      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
@@ -883,7 +884,7 @@ display:
     id: tft_display
     update_interval: never
     auto_clear_enabled: false
-    color_order: BGR
+    color_order: RGB
     show_test_card: true
     pclk_frequency: 16MHZ
     dimensions:
