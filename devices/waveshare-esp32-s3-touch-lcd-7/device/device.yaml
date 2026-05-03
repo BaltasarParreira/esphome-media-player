@@ -68,7 +68,7 @@ esphome:
       - script.execute: backlight_wake_timeout
   platformio_options:
     board_upload.maximum_ram_size: 524288   # --> Bal
-    board_build.flash_mode: dio
+    board_build.flash_mode: qio
     build_flags:
       - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
       - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
@@ -879,6 +879,16 @@ script:
 ## Display
 display:
   - platform: mipi_rgb
+    lambda: |-
+      // Allocate a 100KB buffer in PSRAM
+      size_t size = 102400;
+      void* my_buffer = heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+      
+      if (my_buffer != nullptr) {
+          ESP_LOGD("custom", "PSRAM allocation successful!");
+          // ... use buffer ...
+          free(my_buffer);
+      }
     model: ESP32-S3-TOUCH-LCD-7-800X480
     id: tft_display
     update_interval: never
