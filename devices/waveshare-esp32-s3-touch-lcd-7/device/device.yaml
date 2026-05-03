@@ -36,9 +36,9 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
-#    sdkconfig_options:
-#      CONFIG_HTTPD_MAX_URI_LEN: "128"
-#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
+    sdkconfig_options:
+      CONFIG_HTTPD_MAX_URI_LEN: "128"
+      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
     advanced:
       enable_idf_experimental_features: true
 
@@ -68,7 +68,7 @@ esphome:
       - script.execute: backlight_wake_timeout
 #  platformio_options:
 #    board_upload.maximum_ram_size: 524288   # --> Bal
-#    board_build.flash_mode: qio
+#    board_build.flash_mode: dio
 #    build_flags:
 #      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
 #      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
@@ -222,7 +222,7 @@ logger:
 # -----------------------------------------------------------------------------
 psram:
   mode: octal
-  speed: 80MHz # 120MHz --> Bal
+  speed: 120MHz
 
 
 
