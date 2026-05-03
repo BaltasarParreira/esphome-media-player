@@ -9,8 +9,8 @@
 
 lvgl:
   id: main_lvgl
-  buffer_size: 14% # 25% --> Bal
-  byte_order: little_endian
+#  buffer_size: 14% # 25% --> Bal
+#  byte_order: little_endian
   rotation: ${display_rotation}
   on_boot:
     - lambda: |-
