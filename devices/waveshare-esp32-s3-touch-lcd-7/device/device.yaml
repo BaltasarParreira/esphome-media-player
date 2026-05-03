@@ -33,6 +33,9 @@
 esp32:
   variant: esp32s3
   flash_size: 8MB
+  psram:
+    mode: octal
+    speed: 80MHz
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
