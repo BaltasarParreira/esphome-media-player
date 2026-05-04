@@ -1,8 +1,8 @@
 substitutions:
   name: "music-dashboard-dev"
   friendly_name: "Music Dashboard Dev"
-  # 270° landscape (flipped); see docs/advanced/display-rotation.md
-  display_rotation: "270"
+  # Portrait by default; see docs/advanced/display-rotation.md
+  display_rotation: "0"
 
 wifi:
   ssid: !secret wifi_ssid
