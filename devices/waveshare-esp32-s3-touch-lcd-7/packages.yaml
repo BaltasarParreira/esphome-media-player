@@ -29,7 +29,7 @@ substitutions:
   # Setup screens
   setup_content_width: "560"
   setup_pad_row: "14"
-  setup_instructions_pad_top: "1"
+  setup_instructions_pad_top: "8"
   setup_icon_font: "icon_font_setup"
   setup_button_width: "180"
   setup_button_height: "44"
