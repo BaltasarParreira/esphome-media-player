@@ -2,14 +2,12 @@
 # LVGL MUSIC DASHBOARD - 1280x800 Landscape
 # =============================================================================
 # Split layout: album art on left 800x800, track info on right in 480px panel.
-                                                                     
-                                
 # Data from sensors.yaml; album art from artwork_image (addon/music.yaml).
 # =============================================================================
 
 lvgl:
   id: main_lvgl
-  buffer_size: 14%
+  buffer_size: 15%
 #  byte_order: little_endian
   rotation: ${display_rotation}
   on_boot:
@@ -17,15 +15,6 @@ lvgl:
         lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_MOMENTUM);
         lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_ELASTIC);
         lv_obj_set_scroll_dir(id(speakers_container), LV_DIR_VER);
-                                                                                 
-                                                                               
-                                                                                  
-                                                    
-                                                            
-                                                        
-             
-                                                    
-              
     - lambda: 'id(lvgl_ready) = true;'
     - script.execute: apply_screen_rotation
 
@@ -210,9 +199,6 @@ lvgl:
         # ---------------------------------------------------------------
         # SETTINGS PANEL (swipe-down from top)
         # ---------------------------------------------------------------
-                                                                       
-                                                                            
-                                                                                                             
         - obj:
             id: settings_panel
             x: 0
@@ -2466,29 +2452,6 @@ lvgl:
                                           text_font: icon_font_small
                                           text_color: 0xFFFFFF
                                           align: center
-
-                                                                                   
-                       
-                                           
-                                  
-                        
-                       
-                             
-                              
-                            
-                                    
-                              
-                                 
-                                 
-                            
-                          
-                            
-                                             
-                                     
-                                         
-                                            
-                           
-                                                          
 
         - !include ../setup/ha_setup_prompt.yaml
         - !include ../setup/wifi_setup_prompt.yaml
