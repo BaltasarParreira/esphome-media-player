@@ -146,8 +146,8 @@ select:
 
 logger:
   level: DEBUG
-#  hardware_uart: UART0
-  baud_rate: 0
+  hardware_uart: UART0
+#  baud_rate: 0
 
 
 output:
