@@ -8,8 +8,8 @@ substitutions:
   screen_height: "480"
   artwork_size: "480"
   artwork_display_size: "480"
-  clock_cx: "640"
-  clock_cy: "400"
+  clock_cx: "400"
+  clock_cy: "240"
   device_slug: "guition-esp32-p4-jc8012p4a1"
   firmware_manifest_slug: "jc8012p4a1"
   post_artwork_script: "apply_warm_tones"
@@ -27,8 +27,8 @@ substitutions:
   ha_config_internal: "true"
 
   # Setup screens
-  setup_content_width: "437"
-  setup_pad_row: "20"
+  setup_content_width: "560"
+  setup_pad_row: "14"
   setup_instructions_pad_top: "8"
   setup_icon_font: "icon_font_setup"
   setup_button_width: "137"
