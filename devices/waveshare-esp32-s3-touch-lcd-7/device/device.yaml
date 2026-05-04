@@ -873,6 +873,9 @@ script:
 #    color_order: RGB
 #    auto_clear_enabled: false
 
+external_components:
+  - source: github://esphome/display-rgb
+
 ## Display
 display:
   platform: rgb
