@@ -875,7 +875,7 @@ script:
 
 ## Display
 display:
-  - platform: rgb # mipi_rgb
+    platform: rgb # mipi_rgb
     model: ESP32-S3-TOUCH-LCD-7-800X480
     id: tft_display
     update_interval: never
