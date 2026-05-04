@@ -881,12 +881,13 @@ display:
     update_interval: never
     auto_clear_enabled: false
     color_order: RGB
-    rotation: 90
+    width: 480
+    height: 800
     show_test_card: true
     pclk_frequency: 16MHZ
-    dimensions:
-      width: 800
-      height: 480
+#    dimensions:
+#      width: 800
+#      height: 480
     de_pin:
       number: 5
     hsync_pin:
