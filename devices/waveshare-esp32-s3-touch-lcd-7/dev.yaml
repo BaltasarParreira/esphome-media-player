@@ -1,6 +1,6 @@
 substitutions:
-  name: "music-dashboard"
-  friendly_name: "Music Dashboard"
+  name: "music-dashboard-dev"
+  friendly_name: "Music Dashboard Dev"
   # Portrait by default; see docs/advanced/display-rotation.md
   display_rotation: "0"
 
