@@ -420,15 +420,15 @@ script:
           lv_obj_set_size(id(artwork_bg_panel), 480, 480);
           lv_obj_set_pos(id(album_art_background_widget), 0, 0);
           lv_obj_set_size(id(album_art_background_widget), 480, 480);
-          lv_obj_set_pos(id(artwork_error_label), 200, 380);
-          lv_obj_set_width(id(artwork_error_label), 400);
+          lv_obj_set_pos(id(artwork_error_label), 272, 330);
+          lv_obj_set_width(id(artwork_error_label), 300);
 
           if (landscape) {
             lv_obj_set_pos(id(accent_overlay), 480, 0);
-            lv_obj_set_size(id(accent_overlay), 480, 800);
-            lv_obj_set_pos(id(track_info_panel), 525, 40);
-            lv_obj_set_size(id(track_info_panel), 400, 450);
-            lv_obj_set_style_max_height(id(media_title_label), 316, 0);
+            lv_obj_set_size(id(accent_overlay), 320, 480);
+            lv_obj_set_pos(id(track_info_panel), 504, 34);
+            lv_obj_set_size(id(track_info_panel), 272, 330);
+            lv_obj_set_style_max_height(id(media_title_label), 220, 0);
           } else {
             lv_obj_set_pos(id(accent_overlay), 0, 480);
             lv_obj_set_size(id(accent_overlay), 480, 480);
