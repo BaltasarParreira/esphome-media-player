@@ -11,7 +11,7 @@ lvgl:
   id: main_lvgl
   buffer_size: 14% # 25% --> Bal
 #  byte_order: little_endian
-  rotation: ${display_rotation}
+  rotation: 0 # ${display_rotation} --> Bal
   on_boot:
     - lambda: |-
         lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_MOMENTUM);
