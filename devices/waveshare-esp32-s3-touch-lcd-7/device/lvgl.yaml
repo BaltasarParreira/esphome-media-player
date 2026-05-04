@@ -98,8 +98,8 @@ lvgl:
         # Track info text (always visible in the accent panel)
         - obj:
             id: track_info_text
-            x: 100 # ${layout_track_x}
-            y: 100 #${layout_track_y}
+            x: ${layout_track_x}
+            y: ${layout_track_y}
             width: ${layout_track_width}
             height: ${layout_track_height}
             bg_opa: 0%
