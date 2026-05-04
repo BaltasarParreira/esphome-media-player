@@ -884,8 +884,8 @@ display:
     show_test_card: true
     pclk_frequency: 16MHZ
     dimensions:
-      width: 800
-      height: 480
+      width: 480
+      height: 800
     de_pin:
       number: 5
     hsync_pin:
