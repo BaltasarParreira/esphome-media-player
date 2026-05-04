@@ -20,7 +20,7 @@ obj:
     - obj:
         align: center
         width: ${setup_content_width}
-        height: SIZE_CONTENT
+        height: ${screen_height}
         bg_opa: 0%
         border_width: 0
         pad_all: 0
