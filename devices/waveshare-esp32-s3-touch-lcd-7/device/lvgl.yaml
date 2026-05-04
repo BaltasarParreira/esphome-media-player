@@ -443,13 +443,13 @@ lvgl:
                               widgets:
                                 - label:
                                     text: "Group"
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: group_vol_label
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -549,13 +549,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_0
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_0
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -670,13 +670,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_1
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_1
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -791,13 +791,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_2
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_2
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -912,13 +912,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_3
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_3
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1033,13 +1033,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_4
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_4
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1154,13 +1154,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_5
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_5
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1275,13 +1275,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_6
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_6
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1396,13 +1396,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_7
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_7
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1517,13 +1517,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_8
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_8
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1638,13 +1638,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_9
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_9
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1759,13 +1759,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_10
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_10
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -1880,13 +1880,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_11
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_11
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -2001,13 +2001,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_12
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_12
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -2122,13 +2122,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_13
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_13
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -2243,13 +2243,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_14
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_14
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -2364,13 +2364,13 @@ lvgl:
                                 - label:
                                     id: speaker_name_15
                                     text: ""
-                                    text_font: roboto_light30_font
+                                    text_font: roboto30_font
                                     text_color: 0xFFFFFF
                                     width: 172
                                 - label:
                                     id: speaker_vol_label_15
                                     text: ""
-                                    text_font: roboto_light23_font
+                                    text_font: roboto19_font
                                     text_color: 0xFFFFFF
                                     text_opa: 80%
                           - obj:
@@ -2467,6 +2467,6 @@ lvgl:
             widgets:
               - label:
                   id: clock_label
-                  text_font: roboto_thin300_font
+                  text_font: roboto_thin160_font
                   text_color: 0xFFFFFF
                   text: "00:00"
