@@ -399,7 +399,7 @@ script:
       - lambda: |-
           const bool landscape =
             id(screen_rotation_select).current_option() == "0" ||
-            id(screen_rotation_select).current_option() == "180"; # --> Bal
+            id(screen_rotation_select).current_option() == "180";
           const int screen_w = landscape ? 800 : 480;
           const int screen_h = landscape ? 480 : 800;
 
