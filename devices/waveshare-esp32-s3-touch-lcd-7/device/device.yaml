@@ -11,19 +11,35 @@
 
 
 ## For waveshare 7"
+                   
+                                                                                                                                                                                          
+                                                            
+                                                                
+                                                                                                                                                                                          
 esp32:
   variant: esp32s3
   flash_size: 8MB
   cpu_frequency: 240MHz
+                          
   framework:
     type: esp-idf
     sdkconfig_options:
       CONFIG_HTTPD_MAX_URI_LEN: "128"
-      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"  
+      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
     advanced:
       enable_idf_experimental_features: true
 
 
+                                                                                                                                                                                          
+                         
+                                                                                                                                                                                          
+                                                     
+                                                                    
+                                                                 
+                                                                  
+ 
+                                                                         
+                                                                                                                                                                                          
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -51,9 +67,22 @@ esphome:
 psram:
   mode: octal
   speed: 120MHz
+                   
+                 
+                 
+                
+                
+                
+                
+                   
 
 
 # Hide screen during OTA to avoid flicker
+                            
+                                                                                                                                                                                          
+                                                                  
+                                                                 
+                                                                                                                                                                                          
 ota:
   - platform: esphome
     on_begin:
@@ -70,6 +99,13 @@ ota:
       - lvgl.resume
 
 
+                                                                                                                                                                                          
+                    
+                                                                                                                                                                                          
+                                                               
+                                                          
+                                                                
+                                                                                                                                                                                          
 api:
   on_client_connected:
     - lambda: |-
@@ -144,11 +180,48 @@ select:
             - script.execute: apply_screen_rotation
 
 
+                                                                                                                                                                                          
+         
+                                                                                                                                                                                          
+                                             
+                                                          
+                                                                                                                                                                                          
 logger:
   level: DEBUG
   hardware_uart: UART0
 
 
+                                                                                                                                                                                          
+                         
+                                                                                                                                                                                          
+                                                                       
+                                                                       
+                                        
+                                               
+ 
+                                                                         
+                                                                                                                                                                                          
+      
+           
+               
+
+
+                          
+        
+              
+                      
+                 
+
+
+                                                                                                                                                                                          
+                   
+                                                                                                                                                                                          
+                                                                       
+                                                        
+                                      
+ 
+                                                                        
+                                                                                                                                                                                          
 output:
   - platform: ledc
     id: backlight_output
@@ -166,21 +239,30 @@ ch422g:
   - id: ch422g_hub
 
 
+                                                                                                                                                                                          
+                                     
+                                                                                                                                                                                          
+                                                                    
+                          
+                           
+ 
+                                                              
+                                                                                                                                                                                          
 i2c:
   id: i2c_bus
-#  sda: GPIO7
-#  scl: GPIO8
-#  scan: true
-#  frequency: 400kHz
   sda: GPIO08
   scl: GPIO09
-  scan: True
+  scan: true
   frequency: 400kHz
 
 
 # -----------------------------------------------------------------------------
 # GLOBAL STATE VARIABLES
 # -----------------------------------------------------------------------------
+
+                                                                                                                                                                                          
+                        
+                                                                                                                                                                                          
 globals:
   # -- Touch tracking (swipe gesture detection) --
   - id: touch_x_start
@@ -247,7 +329,15 @@ globals:
 
 
 # -----------------------------------------------------------------------------
-# TOUCHSCREEN (GSL3680)
+# TOUCHSCREEN (GT911 Controller)
+
+
+                                                                                                                                                                                          
+                                
+                                                                                                                                                                                          
+                                                         
+                                                        
+                                                                            
 # -----------------------------------------------------------------------------
 touchscreen:
   - platform: gt911
@@ -317,17 +407,22 @@ touchscreen:
           }
 
           // --- Vertical swipe: settings panel open/close ---
+                   
           if (view_dy > 20 && abs(view_dy) > abs(view_dx) * 2 && !id(is_panel_open)) {
             ESP_LOGD("touch", "Action: open_settings_panel");
             id(open_settings_panel).execute();
             return;
           }
+                                                             
           if (view_dy < -60 && abs(view_dy) > abs(view_dx) * 2 && id(is_panel_open)
               && (lv_obj_has_flag(id(speakers_container), LV_OBJ_FLAG_HIDDEN) || id(speaker_count) <= 1)) {
             ESP_LOGD("touch", "Action: close_settings_panel");
             id(close_settings_panel).execute();
             return;
           }
+                                                              
+                                               
+                   
           if (id(is_panel_open) || id(was_panel_open)) {
             ESP_LOGD("touch", "Action: ignored_panel_open");
             return;
@@ -365,12 +460,24 @@ touchscreen:
             return;
           }
           ESP_LOGD("touch", "Action: none");
+             
 
 
 # -----------------------------------------------------------------------------
 # INTERACTION SCRIPTS
 # -----------------------------------------------------------------------------
+
+                                                                                                                                                                                          
+                     
 # Track navigation: next/previous (allowed when playing or paused).
+                                                    
+                                     
+                                                                                                 
+                                                                                                         
+                                                                   
+                                                                              
+                                                                              
+                                                                      
 script:
   # -- Apply Home Assistant screen-rotation dropdown using native LVGL rotation --
   - id: apply_screen_rotation
@@ -420,23 +527,44 @@ script:
           lv_obj_set_size(id(artwork_bg_panel), 480, 480);
           lv_obj_set_pos(id(album_art_background_widget), 0, 0);
           lv_obj_set_size(id(album_art_background_widget), 480, 480);
-          lv_obj_set_pos(id(artwork_error_label), 272, 330);
+          lv_obj_set_pos(id(artwork_error_label), 90, 225);
           lv_obj_set_width(id(artwork_error_label), 300);
 
           if (landscape) {
+                                                            
+                                                         
+
+                          
+                                                       
+                                                            
+                                                                  
             lv_obj_set_pos(id(accent_overlay), 480, 0);
             lv_obj_set_size(id(accent_overlay), 320, 480);
             lv_obj_set_pos(id(track_info_panel), 504, 34);
             lv_obj_set_size(id(track_info_panel), 272, 330);
             lv_obj_set_style_max_height(id(media_title_label), 220, 0);
+                                                          
+                                                         
+                                                           
+                                                                       
+                                                          
+                                                          
+                                                             
+
+                                                                  
           } else {
             lv_obj_set_pos(id(accent_overlay), 0, 480);
             lv_obj_set_size(id(accent_overlay), 480, 480);
-            lv_obj_set_pos(id(track_info_panel), 64, 527);
-            lv_obj_set_size(id(track_info_panel), 420, 360);
-            lv_obj_set_style_max_height(id(media_title_label), 210, 0);
+            lv_obj_set_pos(id(track_info_panel), 24, 514);
+            lv_obj_set_size(id(track_info_panel), 432, 262);
+            lv_obj_set_style_max_height(id(media_title_label), 130, 0);
           }
 
+                                                                       
+                                                             
+                                                           
+
+                                                       
           lv_obj_set_width(id(media_progress_bar), screen_w);
           lv_obj_set_size(id(settings_panel), screen_w, screen_h);
           lv_obj_set_size(id(clock_screensaver), screen_w, screen_h);
@@ -446,6 +574,7 @@ script:
           resize_fullscreen_overlay(id(ha_setup_prompt), screen_w, screen_h);
           resize_fullscreen_overlay(id(wifi_setup_prompt), screen_w, screen_h);
           resize_fullscreen_overlay(id(loading_screen), screen_w, screen_h);
+                                                                    
 
           if (!lv_obj_has_flag(id(setup_prompt), LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_move_foreground(id(setup_prompt));
@@ -464,6 +593,23 @@ script:
           }
           lv_obj_update_layout(lv_scr_act());
 
+                                                       
+           
+                                             
+
+                                                                                   
+                 
+                 
+         
+                                           
+                                        
+                                         
+           
+                    
+                                             
+               
+                                                       
+                  
   - id: swipe_next_track
     mode: single
     then:
@@ -497,6 +643,7 @@ script:
                 }
       - logger.log: "Media: previous_track"
 
+                                                                            
   - id: open_settings_panel
     mode: single
     then:
@@ -533,6 +680,7 @@ script:
     then:
       - lambda: 'id(is_ui_hidden) = !id(is_ui_hidden);'
 
+                 
   - id: show_track_view
     mode: single
     then:
@@ -542,6 +690,17 @@ script:
           then:
             - lvgl.widget.hide: settings_panel
             - lambda: 'id(is_panel_open) = false;'
+                                                                                                                                                  
+               
+                                              
+                                                  
+                              
+                                           
+                                        
+                                         
+                  
+                                
+                                                                               
 
   - id: enter_tv_mode
     mode: single
