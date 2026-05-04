@@ -20,7 +20,7 @@ esp32:
     sdkconfig_options:
       CONFIG_HTTPD_MAX_URI_LEN: "128"
       CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
-      CONFIG_SPIRAM_CACHE_WORKAROUND: "y"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "15"
     advanced:
       enable_idf_experimental_features: true
 
@@ -51,8 +51,8 @@ esphome:
 
 psram:
   mode: octal
-#  speed: 120MHz
-  speed: 80MHz
+  speed: 120MHz
+
 
 # Hide screen during OTA to avoid flicker
 ota:
