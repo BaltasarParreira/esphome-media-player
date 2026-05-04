@@ -29,7 +29,7 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   on_boot:
-    priority: -10
+    priority: -100
     then:
       - delay: 2s
       - script.execute: apply_timezone
@@ -72,6 +72,7 @@ ota:
 
 
 api:
+  reboot_timeout: 15min
   on_client_connected:
     - lambda: |-
         if (client_info.find("Home Assistant") != std::string::npos) {
