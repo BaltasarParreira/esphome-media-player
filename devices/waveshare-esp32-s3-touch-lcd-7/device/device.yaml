@@ -29,7 +29,7 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   on_boot:
-    priority: -100
+    priority: -10
     then:
       - delay: 2s
       - script.execute: apply_timezone
@@ -51,8 +51,8 @@ esphome:
 
 psram:
   mode: octal
-  speed: 120MHz
-
+#  speed: 120MHz
+  speed: 80MHz
 
 # Hide screen during OTA to avoid flicker
 ota:
@@ -72,7 +72,6 @@ ota:
 
 
 api:
-  reboot_timeout: 15min
   on_client_connected:
     - lambda: |-
         if (client_info.find("Home Assistant") != std::string::npos) {
