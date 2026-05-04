@@ -1,11 +1,11 @@
-# Guition ESP32-P4-JC4880P443 Music Dashboard
+# Guition ESP32-P4-JC8012P4A1 Music Dashboard
 substitutions:
-  name: "music-dashboard-43inch"
-  friendly_name: "Music Dashboard 4.3inch"
+  name: "music-dashboard-ws7inch"
+  friendly_name: "Music Dashboard WS 7inch"
   # ha_host: "homeassistant.local"  # Home Assistant hostname or IP (change if HA runs on a different host)
   # ha_port: "8123"  # Home Assistant port (change if HA runs on a non-standard port)
-  # Native LVGL display rotation. Use packages-90.yaml for landscape.
-  # display_rotation: "180"
+  # Display rotation: 0, 90 (default landscape), 180, or 270
+  # display_rotation: "0"
 
 # Wifi Setup
 wifi:
@@ -15,7 +15,7 @@ wifi:
 # Packages
 packages:
   music_dashboard:
-    url: https://github.com/jtenniswood/esphome-media-player
-    files: [devices/guition-esp32-p4-jc4880p443/packages.yaml]
+    url: https://github.com/BaltasarParreira/esphome-media-player
+    files: [devices/waveshare-esp32-s3-touch-lcd-7/packages.yaml]
     ref: main
     refresh: 1s
