@@ -297,7 +297,7 @@ lvgl:
               - label:
                   id: volume_pct_label
                   text: "30%"
-                  text_font: roboto88_font
+                  text_font: roboto56_font
                   text_color: 0xFFFFFF
                   align: center
                   y: 20
@@ -354,7 +354,7 @@ lvgl:
               - label:
                   id: speakers_title_label
                   text: "Speakers"
-                  text_font: roboto_light60_font
+                  text_font: roboto_light55_font
                   text_color: 0xFFFFFF
                   x: 20
                   y: 19
