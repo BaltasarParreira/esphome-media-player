@@ -1,7 +1,7 @@
 substitutions:
   # Native LVGL display rotation in degrees. ESPHome 2026.4 rotates touch input
   # through LVGL too. 90 is the default landscape layout; 0/180 use portrait.
-  display_rotation: "90"
+  display_rotation: "0"
 
   # Device profile
   screen_width: "800"
