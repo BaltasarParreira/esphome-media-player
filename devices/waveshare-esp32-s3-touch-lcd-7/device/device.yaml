@@ -20,7 +20,7 @@ esp32:
     sdkconfig_options:
       CONFIG_HTTPD_MAX_URI_LEN: "128"
       CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
-      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "15"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
       # Force Mbed TLS to use your 8MB/16MB PSRAM instead of scarce internal RAM
 #      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       # Ensure PSRAM is being used for the HTTP client allocation
@@ -29,12 +29,12 @@ esp32:
 #      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: "4096"
 #      CONFIG_ESP_TLS_USE_SECURE_ELEMENT: "n" # Ensure software-only for stability
       # Give the networking task a higher priority so it doesn't get ignored
-      CONFIG_ESP_SYSTEM_EVENT_TASK_PRIORITY: "5"
+#      CONFIG_ESP_SYSTEM_EVENT_TASK_PRIORITY: "5"
       # Increase the frequency of the system tick to handle packets faster
-      CONFIG_FREERTOS_HZ: "1000"
+#      CONFIG_FREERTOS_HZ: "1000"
       # This frees up internal RAM by moving non-critical WiFi structures to PSRAM
-      CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER: "y"
-      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER: "y"
+#      CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER: "y"
+#      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER: "y"
     advanced:
       enable_idf_experimental_features: true
 
