@@ -25,6 +25,8 @@ esp32:
       CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       # Ensure PSRAM is being used for the HTTP client allocation
       CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP: "y"
+      CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: "8192"  # Spotify needs at least 8KB
+      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: "4096"
     advanced:
       enable_idf_experimental_features: true
 
