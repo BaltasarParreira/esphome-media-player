@@ -7,7 +7,7 @@
 
 lvgl:
   id: main_lvgl
-  buffer_size: 12%
+  buffer_size: 14%
 #  byte_order: little_endian
   rotation: ${display_rotation}
   on_boot:
@@ -109,7 +109,7 @@ lvgl:
                   width: 100%
                   max_height: 220px
                   long_mode: wrap
-                  text_font: roboto_light55_font
+                  text_font: roboto_light40_font
                   text_color: 0xFFFFFF
                   text_align: left
                   text_line_space: 0
@@ -119,7 +119,7 @@ lvgl:
                   pad_top: 10
                   width: 100%
                   long_mode: dot
-                  text_font: roboto_light40_font
+                  text_font: roboto30_font
                   text_color: 0xFFFFFF
                   text_opa: 80%
                   text_align: left
