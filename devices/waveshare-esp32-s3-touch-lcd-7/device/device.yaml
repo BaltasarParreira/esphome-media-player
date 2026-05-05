@@ -21,6 +21,10 @@ esp32:
       CONFIG_HTTPD_MAX_URI_LEN: "128"
       CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "15"
+      # Reduce SSL buffer sizes to fit in remaining internal RAM
+      CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: "4096"
+      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: "4096"
+      # Ensure PSRAM is being used for the HTTP client allocation
       CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP: "y"
     advanced:
       enable_idf_experimental_features: true
