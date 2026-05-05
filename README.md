@@ -1,3 +1,9 @@
+This is my Fork to support the Waveshare ESP32-S3-Touch-LCD-7, is not 100% yet stable regarding the WIFI and the conver art download but it's working most of the times with this ESP32/LCD device.
+It works in landscape mode and I didn't test much portrait but the code can handle the scree rotatin, just didn't lost too much time on it as I wanted to work mainly on landscape.
+Anyone with better aproach osr sugestions feel free to comment.
+
+-------------------------------------------------------------------------------------------------------------------------------
+
 # ESPHome Media Player for Home Assistant
 
 Turn an ESP32 touchscreen into a dedicated music controller for your home.
