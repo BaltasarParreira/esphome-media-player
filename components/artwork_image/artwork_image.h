@@ -53,7 +53,8 @@ class ArtworkImage : public PollingComponent,
    * @param buffer_size Size of the buffer used to download the image.
    */
   ArtworkImage(const std::string &url, int width, int height, ImageFormat format, image::ImageType type,
-              image::Transparency transparency, uint32_t buffer_size, bool is_big_endian);
+              image::Transparency transparency, uint32_t buffer_size, bool is_big_endian,
+              bool allow_insecure_local_urls);
 
   void draw(int x, int y, display::Display *display, Color color_on, Color color_off) override;
 
@@ -110,6 +111,11 @@ class ArtworkImage : public PollingComponent,
 
  protected:
   bool validate_url_(const std::string &url);
+  bool should_use_insecure_local_url_(const std::string &url) const;
+  bool is_private_or_local_host_(const std::string &host) const;
+  std::shared_ptr<http_request::HttpContainer> get_insecure_(const std::string &url,
+                                                             const std::vector<http_request::Header> &headers,
+                                                             const std::vector<std::string> &collect_headers);
   ImageFormat detect_format_();
   bool detect_progressive_jpeg_();
   bool detect_heic_();
@@ -195,6 +201,7 @@ class ArtworkImage : public PollingComponent,
    * This is used to determine how to store 16 bit colors in the buffer.
    */
   bool is_big_endian_;
+  bool allow_insecure_local_urls_;
   /**
    * Actual width of the current image. If fixed_width_ is specified,
    * this will be equal to it; otherwise it will be set once the decoding

@@ -56,3 +56,16 @@ substitutions:
 ```
 
 Default behaviour remains `http` on port `8123` with SSL verification enabled, so existing setups are unchanged.
+
+## Local artwork with self-signed certificates
+
+Some media players, including Wiim devices, publish album artwork as a direct `https://` URL on the local network. If that local artwork server uses a self-signed certificate, the display cannot verify it and the artwork download will fail.
+
+For that case, leave the normal Home Assistant SSL settings as they are and enable local artwork bypass only:
+
+```yaml
+substitutions:
+  allow_insecure_local_artwork: "true"
+```
+
+This only applies to local/private HTTPS artwork URLs, such as `192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`, link-local addresses, `localhost`, and `.local` hostnames. Public internet HTTPS artwork continues to use certificate verification. Only enable this on a trusted local network.

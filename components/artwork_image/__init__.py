@@ -2,6 +2,7 @@ import logging
 import os
 
 from esphome import automation
+from esphome.components import esp32
 import esphome.codegen as cg
 from esphome.components.const import CONF_BYTE_ORDER, CONF_REQUEST_HEADERS
 from esphome.components.http_request import CONF_HTTP_REQUEST_ID, HttpRequestComponent
@@ -44,6 +45,7 @@ CODEOWNERS = ["@jtenniswood"]
 MULTI_CONF = True
 
 CONF_ON_DOWNLOAD_FINISHED = "on_download_finished"
+CONF_ALLOW_INSECURE_LOCAL_URLS = "allow_insecure_local_urls"
 CONF_PLACEHOLDER = "placeholder"
 CONF_TRANSPARENCY = "transparency"
 CONF_UPDATE = "update"
@@ -173,6 +175,7 @@ ARTWORK_IMAGE_SCHEMA = (
             ),
             cv.Optional(CONF_PLACEHOLDER): cv.use_id(Image_),
             cv.Optional(CONF_BUFFER_SIZE, default=65536): cv.int_range(256, 524288),
+            cv.Optional(CONF_ALLOW_INSECURE_LOCAL_URLS, default=False): cv.boolean,
             cv.Optional(CONF_ON_DOWNLOAD_FINISHED): automation.validate_automation({}),
             cv.Optional(CONF_ON_ERROR): automation.validate_automation({}),
         }
@@ -256,6 +259,18 @@ async def artwork_image_action_to_code(config, action_id, template_arg, args):
 async def to_code(config):
     image_format = IMAGE_FORMATS[config[CONF_FORMAT]]
     image_format.actions()
+    if config[CONF_ALLOW_INSECURE_LOCAL_URLS]:
+        cg.add_define("USE_ARTWORK_IMAGE_INSECURE_LOCAL_URLS")
+        try:
+            from esphome.core import CORE
+
+            if CORE.is_esp32 and CORE.using_esp_idf:
+                esp32.add_idf_sdkconfig_option("CONFIG_ESP_TLS_INSECURE", True)
+                esp32.add_idf_sdkconfig_option(
+                    "CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY", True
+                )
+        except Exception as err:
+            _LOGGER.debug("Could not enable ESP-IDF insecure TLS options: %s", err)
     if lvgl_defines is not None:
         lvgl_defines.add_define("LV_DRAW_SW_SUPPORT_RGB565", "1")
         lvgl_defines.add_define("LV_DRAW_SW_SUPPORT_RGB565A8", "1")
@@ -281,6 +296,7 @@ async def to_code(config):
         transparent,
         config[CONF_BUFFER_SIZE],
         config.get(CONF_BYTE_ORDER) != "LITTLE_ENDIAN",
+        config[CONF_ALLOW_INSECURE_LOCAL_URLS],
     )
     await cg.register_component(var, config)
     await cg.register_parented(var, config[CONF_HTTP_REQUEST_ID])

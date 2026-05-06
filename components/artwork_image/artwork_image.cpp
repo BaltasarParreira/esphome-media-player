@@ -1,11 +1,18 @@
 #include "artwork_image.h"
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include "esphome/core/log.h"
 #include "esphome/core/version.h"
 
 #ifdef USE_ESP32
 #include "esp_heap_caps.h"
+#endif
+
+#ifdef USE_ESP_IDF
+#include "esp_http_client.h"
 #endif
 
 static const char *const TAG = "artwork_image";
@@ -30,6 +37,48 @@ namespace artwork_image {
 
 using image::ImageType;
 
+#ifdef USE_ESP_IDF
+class InsecureLocalHttpContainer : public http_request::HttpContainer {
+ public:
+  explicit InsecureLocalHttpContainer(esp_http_client_handle_t client) : client_(client) {}
+
+  void add_response_header(const std::string &name, const std::string &value) {
+    this->response_headers_.push_back({name, value});
+  }
+
+  int read(uint8_t *buf, size_t max_len) override {
+    int read = esp_http_client_read(this->client_, reinterpret_cast<char *>(buf), max_len);
+    if (read > 0) {
+      this->bytes_read_ += read;
+    }
+    return read;
+  }
+
+  void end() override {
+    if (this->client_ != nullptr) {
+      esp_http_client_close(this->client_);
+      esp_http_client_cleanup(this->client_);
+      this->client_ = nullptr;
+    }
+  }
+
+ protected:
+  esp_http_client_handle_t client_{nullptr};
+};
+
+static esp_err_t insecure_local_http_event_handler(esp_http_client_event_t *evt) {
+  auto *container = static_cast<InsecureLocalHttpContainer *>(evt->user_data);
+  if (container == nullptr || evt->event_id != HTTP_EVENT_ON_HEADER) {
+    return ESP_OK;
+  }
+  const std::string header_name = str_lower_case(evt->header_key);
+  if (header_name == CONTENT_TYPE_HEADER_NAME) {
+    container->add_response_header(header_name, evt->header_value);
+  }
+  return ESP_OK;
+}
+#endif
+
 inline bool is_color_on(const Color &color) {
   // This produces the most accurate monochrome conversion, but is slightly slower.
   //  return (0.2125 * color.r + 0.7154 * color.g + 0.0721 * color.b) > 127;
@@ -40,7 +89,8 @@ inline bool is_color_on(const Color &color) {
 }
 
 ArtworkImage::ArtworkImage(const std::string &url, int width, int height, ImageFormat format, ImageType type,
-                         image::Transparency transparency, uint32_t download_buffer_size, bool is_big_endian)
+                         image::Transparency transparency, uint32_t download_buffer_size, bool is_big_endian,
+                         bool allow_insecure_local_urls)
     : Image(nullptr, 0, 0, type, transparency),
       buffer_(nullptr),
       download_buffer_(download_buffer_size),
@@ -49,6 +99,7 @@ ArtworkImage::ArtworkImage(const std::string &url, int width, int height, ImageF
       fixed_width_(width),
       fixed_height_(height),
       is_big_endian_(is_big_endian),
+      allow_insecure_local_urls_(allow_insecure_local_urls),
       buffer_width_(0),
       buffer_height_(0),
       start_time_(0) {
@@ -188,7 +239,11 @@ void ArtworkImage::update() {
     headers.push_back(http_request::Header{header.first, header.second.value()});
   }
 
-  this->downloader_ = this->parent_->get(this->url_, headers, {CONTENT_TYPE_HEADER_NAME});
+  if (this->should_use_insecure_local_url_(this->url_)) {
+    this->downloader_ = this->get_insecure_(this->url_, headers, {CONTENT_TYPE_HEADER_NAME});
+  } else {
+    this->downloader_ = this->parent_->get(this->url_, headers, {CONTENT_TYPE_HEADER_NAME});
+  }
 
   if (this->downloader_ == nullptr) {
     ESP_LOGE(TAG, "Download failed.");
@@ -241,6 +296,111 @@ void ArtworkImage::update() {
   this->start_time_ = ::time(nullptr);
   this->last_data_millis_ = millis();
   this->enable_loop();
+}
+
+bool ArtworkImage::should_use_insecure_local_url_(const std::string &url) const {
+  if (!this->allow_insecure_local_urls_ || url.rfind("https://", 0) != 0) {
+    return false;
+  }
+
+  size_t host_start = 8;
+  size_t host_end = url.find_first_of("/?#", host_start);
+  std::string authority = url.substr(host_start, host_end == std::string::npos ? std::string::npos : host_end - host_start);
+  size_t at = authority.rfind('@');
+  if (at != std::string::npos) {
+    authority = authority.substr(at + 1);
+  }
+
+  std::string host;
+  if (!authority.empty() && authority.front() == '[') {
+    size_t end = authority.find(']');
+    host = end == std::string::npos ? authority : authority.substr(1, end - 1);
+  } else {
+    size_t colon = authority.find(':');
+    host = colon == std::string::npos ? authority : authority.substr(0, colon);
+  }
+
+  std::transform(host.begin(), host.end(), host.begin(), [](unsigned char c) { return std::tolower(c); });
+  return this->is_private_or_local_host_(host);
+}
+
+bool ArtworkImage::is_private_or_local_host_(const std::string &host) const {
+  if (host == "localhost" || host == "homeassistant.local" ||
+      (host.size() > 6 && host.compare(host.size() - 6, 6, ".local") == 0)) {
+    return true;
+  }
+  if (host.rfind("fe80:", 0) == 0 || host == "::1") {
+    return true;
+  }
+
+  int parts[4] = {-1, -1, -1, -1};
+  const char *cursor = host.c_str();
+  char *end = nullptr;
+  for (int i = 0; i < 4; i++) {
+    long value = std::strtol(cursor, &end, 10);
+    if (end == cursor || value < 0 || value > 255) {
+      return false;
+    }
+    parts[i] = static_cast<int>(value);
+    if (i < 3) {
+      if (*end != '.') return false;
+      cursor = end + 1;
+    } else if (*end != '\0') {
+      return false;
+    }
+  }
+
+  return parts[0] == 10 || parts[0] == 127 || (parts[0] == 192 && parts[1] == 168) ||
+         (parts[0] == 172 && parts[1] >= 16 && parts[1] <= 31) || (parts[0] == 169 && parts[1] == 254);
+}
+
+std::shared_ptr<http_request::HttpContainer> ArtworkImage::get_insecure_(
+    const std::string &url, const std::vector<http_request::Header> &headers,
+    const std::vector<std::string> &collect_headers) {
+#ifdef USE_ESP_IDF
+  ESP_LOGW(TAG, "Using insecure TLS for local artwork URL: %s", url.c_str());
+  esp_http_client_config_t config = {};
+  config.url = url.c_str();
+  config.method = HTTP_METHOD_GET;
+  config.timeout_ms = this->parent_->get_timeout();
+  config.disable_auto_redirect = false;
+  config.max_redirection_count = 3;
+  config.auth_type = HTTP_AUTH_TYPE_BASIC;
+  config.event_handler = insecure_local_http_event_handler;
+
+  esp_http_client_handle_t client = esp_http_client_init(&config);
+  if (client == nullptr) {
+    ESP_LOGE(TAG, "Insecure local artwork request failed; client could not be initialized");
+    return nullptr;
+  }
+
+  auto container = std::make_shared<InsecureLocalHttpContainer>(client);
+  container->set_parent(this->parent_);
+  container->set_secure(true);
+  config.user_data = static_cast<void *>(container.get());
+  esp_http_client_set_user_data(client, static_cast<void *>(container.get()));
+
+  for (const auto &header : headers) {
+    esp_http_client_set_header(client, header.name.c_str(), header.value.c_str());
+  }
+
+  const uint32_t start = millis();
+  esp_err_t err = esp_http_client_open(client, 0);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "Insecure local artwork request failed: %s", esp_err_to_name(err));
+    container->end();
+    return nullptr;
+  }
+
+  int content_length = esp_http_client_fetch_headers(client);
+  container->content_length = content_length > 0 ? static_cast<size_t>(content_length) : 0;
+  container->status_code = esp_http_client_get_status_code(client);
+  container->duration_ms = millis() - start;
+  return container;
+#else
+  ESP_LOGW(TAG, "Insecure local artwork is only supported on ESP-IDF; using normal HTTP client");
+  return this->parent_->get(url, headers, collect_headers);
+#endif
 }
 
 void ArtworkImage::loop() {

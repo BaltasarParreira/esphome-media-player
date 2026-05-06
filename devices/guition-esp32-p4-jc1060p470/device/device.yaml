@@ -1,13 +1,11 @@
 # =============================================================================
-# HARDWARE CONFIGURATION - Waveshare ESP32-P4-86-Panel / Touch LCD 4B
+# HARDWARE CONFIGURATION - Guition ESP32-P4-JC1060P470
 # =============================================================================
 # This file defines the physical hardware settings for the ESP32 touchscreen.
 # It tells ESPHome how to communicate with the display, touchscreen, and
 # other components on this specific device.
 #
-# WARNING: These settings are specific to the Waveshare 4" 720x720 ESP32-P4
-#          panel family: ESP32-P4-WIFI6-Touch-LCD-4B and
-#          ESP32-P4-86-Panel-ETH-2RO.
+# WARNING: These settings are specific to the Guition ESP32-P4-JC1060P470.
 #          Using this config with a different device may cause issues.
 # =============================================================================
 
@@ -16,15 +14,12 @@
 # PROCESSOR / BOARD
 # -----------------------------------------------------------------------------
 # Defines which ESP32 chip and development framework to use.
-# The ESP32-P4 has no built-in Wi-Fi, so connectivity is provided by the
-# ESP32-C6 coprocessor configured below.
+# The ESP32-P4 uses an ESP32-C6 coprocessor for Wi-Fi/Bluetooth.
 # -----------------------------------------------------------------------------
 esp32:
   variant: ESP32P4
-  flash_size: 32MB
+  flash_size: 16MB
   cpu_frequency: 360MHz
-  # Current Waveshare 4" P4 panels report ESP-ROM:esp32p4-eco2 in the boot log.
-  # ESPHome 2026.4 defaults P4 builds to production rev3 silicon unless this is set.
   engineering_sample: true
   framework:
     type: esp-idf
@@ -48,6 +43,16 @@ esp32:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  on_boot:
+    priority: -10
+    then:
+      - delay: 2s
+      - script.execute: apply_timezone
+      - light.turn_on:
+          id: backlight
+          brightness: 100%
+          transition_length: 500ms
+      - script.execute: backlight_wake_timeout
   platformio_options:
     board_build.flash_mode: dio
     build_flags:
@@ -57,9 +62,7 @@ esphome:
       - "-Wno-deprecated-declarations"
 
 
-# -----------------------------------------------------------------------------
-# ESP32-C6 COPROCESSOR (Wi-Fi / Bluetooth)
-# -----------------------------------------------------------------------------
+# ESP32-C6 coprocessor for Wi-Fi and Bluetooth via SDIO
 esp32_hosted:
   variant: ESP32C6
   reset_pin: GPIO54
@@ -147,6 +150,35 @@ api:
 
 
 # -----------------------------------------------------------------------------
+# SCREEN ROTATION SELECT
+# -----------------------------------------------------------------------------
+# Exposes ESPHome 2026.4 native LVGL display rotation to Home Assistant.
+# LVGL handles the screen transform and touch input rotation together.
+# -----------------------------------------------------------------------------
+select:
+  - platform: template
+    name: "Screen Rotation"
+    id: screen_rotation_select
+    icon: "mdi:screen-rotation"
+    entity_category: config
+    internal: ${ha_config_internal}
+    optimistic: true
+    restore_value: true
+    initial_option: "${display_rotation}"
+    options:
+      - "0"
+      - "90"
+      - "180"
+      - "270"
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(lvgl_ready);'
+          then:
+            - script.execute: apply_screen_rotation
+
+
+# -----------------------------------------------------------------------------
 # LOGGING
 # -----------------------------------------------------------------------------
 # Outputs debug messages for troubleshooting.
@@ -162,9 +194,13 @@ logger:
 # -----------------------------------------------------------------------------
 # The display requires extra memory for graphics. PSRAM is external RAM
 # soldered onto the board that supplements the ESP32's internal memory.
+# - mode: hex = 32MB P4 module PSRAM bus
+# - speed: 200MHz clock speed for memory access
+#
 # Without this, the display won't have enough memory for the framebuffer.
 # -----------------------------------------------------------------------------
 psram:
+  mode: hex
   speed: 200MHz
 
 
@@ -179,25 +215,28 @@ esp_ldo:
 # BACKLIGHT CONTROL
 # -----------------------------------------------------------------------------
 # The display backlight is controlled via PWM (pulse width modulation).
-# The visible range is calibrated in packages.yaml so web brightness settings
-# map onto this panel's usable PWM range while 0% remains true off.
+# This allows dimming the screen brightness from 0-100%.
+# - pin: GPIO23 controls the backlight
+#
 # This output is used by the backlight component in addon/backlight.yaml
 # -----------------------------------------------------------------------------
 output:
   - platform: ledc
     id: backlight_output
-    pin: GPIO26
-    inverted: true
+    pin: GPIO23
 
 
 # -----------------------------------------------------------------------------
 # I2C BUS (Touchscreen Communication)
 # -----------------------------------------------------------------------------
 # I2C is how the ESP32 communicates with the touchscreen controller.
+# - sda: Data line (GPIO7)
+# - scl: Clock line (GPIO8)
+#
 # This I2C bus is used by the touchscreen configuration below.
 # -----------------------------------------------------------------------------
 i2c:
-  id: touchscreen_bus
+  id: i2c_bus
   sda: GPIO7
   scl: GPIO8
   scan: true
@@ -270,6 +309,9 @@ globals:
     type: bool
     restore_value: true
     initial_value: 'false'
+  - id: lvgl_ready
+    type: bool
+    initial_value: 'false'
 
 
 
@@ -287,7 +329,10 @@ globals:
 touchscreen:
   - platform: gt911
     id: tft_touch
-    display: my_display
+    display: tft_display
+    i2c_id: i2c_bus
+    reset_pin: GPIO22
+    interrupt_pin: GPIO21
     on_touch:
       - lambda: |-
           id(was_screen_dimmed) = id(is_screen_dimmed);
@@ -312,14 +357,22 @@ touchscreen:
       - lambda: |-
           int dx = id(touch_x_end) - id(touch_x_start);
           int dy = id(touch_y_end) - id(touch_y_start);
-          int sy = id(touch_y_start);
-          ESP_LOGD("touch", "Swipe dx=%d dy=%d start=(%d,%d) end=(%d,%d)",
-                   dx, dy, id(touch_x_start), id(touch_y_start),
+          int32_t view_x_start = id(touch_x_start);
+          int32_t view_y_start = id(touch_y_start);
+          int32_t view_x_end = id(touch_x_end);
+          int32_t view_y_end = id(touch_y_end);
+          id(main_lvgl).rotate_coordinates(view_x_start, view_y_start);
+          id(main_lvgl).rotate_coordinates(view_x_end, view_y_end);
+          int view_dx = view_x_end - view_x_start;
+          int view_dy = view_y_end - view_y_start;
+
+          ESP_LOGD("touch", "Swipe raw=(%d,%d) view=(%d,%d) rotation=%s start=(%d,%d) end=(%d,%d)",
+                   dx, dy, view_dx, view_dy, id(screen_rotation_select).current_option().c_str(), id(touch_x_start), id(touch_y_start),
                    id(touch_x_end), id(touch_y_end));
 
           // --- Dismiss actions prompt on tap ---
           if (!lv_obj_has_flag(id(actions_prompt), LV_OBJ_FLAG_HIDDEN)) {
-            if (abs(dx) < 30 && abs(dy) < 30) {
+            if (abs(view_dx) < 20 && abs(view_dy) < 20) {
               lv_obj_add_flag(id(actions_prompt), LV_OBJ_FLAG_HIDDEN);
               id(actions_prompt_acked) = true;
               id(device_has_been_setup) = true;
@@ -329,7 +382,7 @@ touchscreen:
           }
 
           // --- Long press (5 s): turn off display ---
-          if (abs(dx) < 30 && abs(dy) < 30 && !id(was_screen_dimmed)
+          if (abs(view_dx) < 20 && abs(view_dy) < 20 && !id(was_screen_dimmed)
               && (millis() - id(touch_start_time) >= 5000)) {
             id(turn_off_display).execute();
             return;
@@ -337,12 +390,12 @@ touchscreen:
 
           // --- Vertical swipe: settings panel open/close ---
           // Swipe down to open: 30px+ downward movement, panel closed
-          if (dy > 30 && abs(dy) > abs(dx) * 2 && !id(is_panel_open)) {
+          if (view_dy > 20 && abs(view_dy) > abs(view_dx) * 2 && !id(is_panel_open)) {
             id(open_settings_panel).execute();
             return;
           }
           // Swipe up to close: panel is open, but not when multi-speaker list is scrollable
-          if (dy < -90 && abs(dy) > abs(dx) * 2 && id(is_panel_open)
+          if (view_dy < -60 && abs(view_dy) > abs(view_dx) * 2 && id(is_panel_open)
               && (lv_obj_has_flag(id(speakers_container), LV_OBJ_FLAG_HIDDEN) || id(speaker_count) <= 1)) {
             id(close_settings_panel).execute();
             return;
@@ -355,7 +408,7 @@ touchscreen:
           }
 
           // --- Horizontal swipe: track navigation (works when playing or paused) ---
-          if (abs(dx) > 120 && abs(dx) > abs(dy) * 2) {
+          if (abs(view_dx) > 80 && abs(view_dx) > abs(view_dy) * 2) {
             bool can_skip = false;
             if (id(is_tv_mode)) {
               std::string e = id(linked_media_player_entity).state;
@@ -373,45 +426,22 @@ touchscreen:
               }
             }
             if (can_skip) {
-              if (dx > 0) {
+              if (view_dx > 0) {
                 id(swipe_previous_track).execute();
               } else {
                 id(swipe_next_track).execute();
               }
             }
           }
-          // Tap: minimal movement anywhere on screen — toggle UI visibility
-          // Excludes the play/pause button area (x:390-462, y:356-428).
-          // If screen was dimmed, just wake it (don't hide the UI).
-          // Only allow hiding the UI when media is actively playing.
-          else if (abs(dx) < 30 && abs(dy) < 30) {
-            int sx = id(touch_x_start);
-            // Ignore taps on the play/pause button
-            if (sx >= 578 && sx <= 701 && sy >= 527 && sy <= 650) {
-              return;
-            }
-            if (id(was_screen_dimmed)) {
-              // Screen was dimmed — wake only, don't toggle
-            } else if (id(is_ui_hidden)) {
-              // UI is hidden — always allow showing it
-              id(toggle_ui).execute();
-            } else {
-              bool playing;
-              if (id(is_tv_mode)) {
-                playing = id(tv_media_player_state_sensor).has_state() && id(tv_media_player_state_sensor).state == "playing";
-              } else {
-                playing = id(media_player_state_sensor).has_state() && id(media_player_state_sensor).state == "playing";
-              }
-              if (playing) id(toggle_ui).execute();
-            }
-          }
+          // Taps are left to LVGL controls. Track data is permanent on this
+          // portrait profile, so plain taps never hide the now-playing panel.
 
 
 # -----------------------------------------------------------------------------
 # INTERACTION SCRIPTS
 # -----------------------------------------------------------------------------
 # Scripts triggered by touch gestures and UI events:
-#   toggle_ui           – Tap to show/hide the now-playing overlay (fade anim)
+#   toggle_ui           – Keeps the permanent now-playing panel visible
 #   swipe_next_track    – Swipe left to skip to the next track (allowed when playing or paused)
 #   swipe_previous_track– Swipe right to go back to the previous track (allowed when playing or paused)
 #   open_settings_panel – Swipe down to reveal the settings panel
@@ -423,34 +453,147 @@ touchscreen:
 # mode: restart – cancels the in-progress run and starts fresh
 # -----------------------------------------------------------------------------
 script:
-  # -- Toggle now-playing overlay (fade in / fade out) --
-  - id: toggle_ui
+  # -- Reapply JC1060P470 horizontal pixel-aspect compensation --
+  - id: apply_horizontal_adjustment
+    mode: restart
+    then:
+      - lambda: |-
+          auto apply_adjustment = [](lv_obj_t *obj) {
+            if (obj == nullptr) {
+              return;
+            }
+            const lv_coord_t width = lv_obj_get_width(obj);
+            const lv_coord_t height = lv_obj_get_height(obj);
+            lv_obj_set_style_transform_pivot_x(obj, width / 2, 0);
+            lv_obj_set_style_transform_pivot_y(obj, height / 2, 0);
+            lv_obj_set_style_transform_scale_x(obj, ${horizontal_adjustment_scale_x}, 0);
+          };
+
+          apply_adjustment(id(album_art_background_widget));
+          apply_adjustment(id(artwork_error_label));
+          apply_adjustment(id(media_title_label));
+          apply_adjustment(id(media_artist_label));
+          apply_adjustment(id(media_time_label));
+          apply_adjustment(id(media_play_pause_button));
+          apply_adjustment(id(media_play_icon));
+          apply_adjustment(id(media_pause_icon));
+          apply_adjustment(id(volume_arc));
+          apply_adjustment(id(volume_title_label));
+          apply_adjustment(id(volume_pct_label));
+          apply_adjustment(id(volume_down_button));
+          apply_adjustment(id(volume_down_icon));
+          apply_adjustment(id(volume_up_button));
+          apply_adjustment(id(volume_up_icon));
+
+  # -- Apply Home Assistant screen-rotation dropdown using native LVGL rotation --
+  - id: apply_screen_rotation
     mode: restart
     then:
       - if:
           condition:
-            lambda: 'return id(is_ui_hidden);'
+            lambda: 'return id(screen_rotation_select).current_option() == "0";'
           then:
-            - lambda: 'id(is_ui_hidden) = false;'
-            - lvgl.widget.show: accent_overlay
-            - lvgl.widget.show: track_info_text
+            - lvgl.display.set_rotation: 0
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "90";'
+          then:
+            - lvgl.display.set_rotation: 90
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "180";'
+          then:
+            - lvgl.display.set_rotation: 180
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "270";'
+          then:
+            - lvgl.display.set_rotation: 270
+      - lambda: |-
+          const bool landscape =
+            id(screen_rotation_select).current_option() == "0" ||
+            id(screen_rotation_select).current_option() == "180";
+          const int screen_w = landscape ? 1024 : 600;
+          const int screen_h = landscape ? 600 : 1024;
+
+          auto resize_fullscreen_overlay = [](lv_obj_t *obj, lv_coord_t width, lv_coord_t height) {
+            if (obj == nullptr) {
+              return;
+            }
+            lv_obj_set_pos(obj, 0, 0);
+            lv_obj_set_size(obj, width, height);
+
+            lv_obj_t *content = lv_obj_get_child(obj, 0);
+            if (content != nullptr) {
+              lv_obj_center(content);
+            }
+          };
+
+          lv_obj_set_pos(id(artwork_bg_panel), 0, 0);
+          lv_obj_set_size(id(artwork_bg_panel), 600, 600);
+          lv_obj_set_pos(id(album_art_background_widget), 0, 0);
+          lv_obj_set_size(id(album_art_background_widget), 600, 600);
+          lv_obj_set_pos(id(artwork_error_label), 150, 285);
+          lv_obj_set_width(id(artwork_error_label), 300);
+
+          if (landscape) {
+            lv_obj_set_pos(id(accent_overlay), 600, 0);
+            lv_obj_set_size(id(accent_overlay), 424, 600);
+            lv_obj_set_pos(id(track_info_text), 632, 34);
+            lv_obj_set_size(id(track_info_text), 360, 430);
+            lv_obj_set_style_max_height(id(media_title_label), 260, 0);
+          } else {
+            lv_obj_set_pos(id(accent_overlay), 0, 600);
+            lv_obj_set_size(id(accent_overlay), 600, 424);
+            lv_obj_set_pos(id(track_info_text), 40, 636);
+            lv_obj_set_size(id(track_info_text), 520, 300);
+            lv_obj_set_style_max_height(id(media_title_label), 170, 0);
+          }
+
+          lv_obj_set_width(id(media_progress_bar), screen_w);
+          lv_obj_set_size(id(settings_panel), screen_w, screen_h);
+          lv_obj_set_size(id(clock_screensaver), screen_w, screen_h);
+
+          resize_fullscreen_overlay(id(setup_prompt), screen_w, screen_h);
+          resize_fullscreen_overlay(id(actions_prompt), screen_w, screen_h);
+          resize_fullscreen_overlay(id(ha_setup_prompt), screen_w, screen_h);
+          resize_fullscreen_overlay(id(wifi_setup_prompt), screen_w, screen_h);
+          resize_fullscreen_overlay(id(loading_screen), screen_w, screen_h);
+
+          if (!lv_obj_has_flag(id(setup_prompt), LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_move_foreground(id(setup_prompt));
+          }
+          if (!lv_obj_has_flag(id(actions_prompt), LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_move_foreground(id(actions_prompt));
+          }
+          if (!lv_obj_has_flag(id(ha_setup_prompt), LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_move_foreground(id(ha_setup_prompt));
+          }
+          if (!lv_obj_has_flag(id(wifi_setup_prompt), LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_move_foreground(id(wifi_setup_prompt));
+          }
+          if (!lv_obj_has_flag(id(loading_screen), LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_move_foreground(id(loading_screen));
+          }
+          lv_obj_update_layout(lv_scr_act());
+      - script.execute: apply_horizontal_adjustment
+
+  # -- Keep now-playing panel visible (7-inch layout has permanent track data) --
+  - id: toggle_ui
+    mode: restart
+    then:
+      - lambda: 'id(is_ui_hidden) = false;'
+      - lvgl.widget.show: accent_overlay
+      - lvgl.widget.show: track_info_text
+      - if:
+          condition:
+            lambda: 'return !id(is_tv_idle);'
+          then:
             - lvgl.widget.show: media_play_pause_button
-            - lambda: |-
-                if (id(artist_has_content)) lv_obj_clear_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
-                lv_obj_fade_in(id(accent_overlay), 200, 0);
-                lv_obj_fade_in(id(track_info_text), 200, 0);
-                lv_obj_fade_in(id(media_play_pause_button), 200, 0);
-          else:
-            - lambda: 'id(is_ui_hidden) = true;'
-            - lambda: |-
-                lv_obj_fade_out(id(accent_overlay), 300, 0);
-                lv_obj_fade_out(id(track_info_text), 300, 0);
-                lv_obj_fade_out(id(media_play_pause_button), 300, 0);
-            - delay: 400ms
-            - lvgl.widget.hide: accent_overlay
-            - lvgl.widget.hide: track_info_text
-            - lvgl.widget.hide: media_play_pause_button
-            - lvgl.widget.hide: media_artist_label
+      - lambda: |-
+          if (id(artist_has_content) && !id(is_tv_idle)) {
+            lv_obj_clear_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
+          }
   # -- Track navigation (horizontal swipe; allowed when playing or paused) --
   - id: swipe_next_track
     mode: single
@@ -527,33 +670,17 @@ script:
           then:
             - lvgl.widget.hide: settings_panel
             - lambda: 'id(is_panel_open) = false;'
-      - if:
-          condition:
-            lambda: 'return !id(auto_show_track_info).state;'
-          then:
-            - script.stop: toggle_ui
-            - lambda: 'id(is_ui_hidden) = true;'
-            - lvgl.widget.hide: accent_overlay
-            - lvgl.widget.hide: track_info_text
-            - lvgl.widget.hide: media_play_pause_button
-            - lvgl.widget.hide: media_artist_label
-            - script.stop: show_track_view
-      - if:
-          condition:
-            lambda: 'return id(is_ui_hidden);'
-          then:
-            - script.stop: toggle_ui
-            - lambda: 'id(is_ui_hidden) = false;'
-            - lvgl.widget.show: accent_overlay
-            - lvgl.widget.show: track_info_text
-            - lambda: |-
-                if (!id(is_tv_idle)) {
-                  lv_obj_clear_flag(id(media_play_pause_button), LV_OBJ_FLAG_HIDDEN);
-                  lv_obj_fade_in(id(media_play_pause_button), 200, 0);
-                }
-                if (id(artist_has_content) && !id(is_tv_idle)) lv_obj_clear_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
-                lv_obj_fade_in(id(accent_overlay), 200, 0);
-                lv_obj_fade_in(id(track_info_text), 200, 0);
+      - script.stop: toggle_ui
+      - lambda: 'id(is_ui_hidden) = false;'
+      - lvgl.widget.show: accent_overlay
+      - lvgl.widget.show: track_info_text
+      - lambda: |-
+          if (!id(is_tv_idle)) {
+            lv_obj_clear_flag(id(media_play_pause_button), LV_OBJ_FLAG_HIDDEN);
+          }
+          if (id(artist_has_content) && !id(is_tv_idle)) {
+            lv_obj_clear_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
+          }
 
   - id: enter_tv_mode
     mode: single
@@ -636,7 +763,7 @@ script:
                       std::string path = id(tv_entity_picture_sensor).state;
                       while (!path.empty() && (path.back() == '\n' || path.back() == '\r' || path.back() == ' ')) path.pop_back();
                       id(last_tv_artwork_url) = (path.substr(0, 7) == "http://" || path.substr(0, 8) == "https://") ? path : (id(ha_base_url) + path);
-                      id(last_tv_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_tv_artwork_url), 720);
+                      id(last_tv_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_tv_artwork_url), ${artwork_size});
                   - delay: 50ms
                   - artwork_image.set_url:
                       id: tv_art_background
@@ -651,7 +778,7 @@ script:
           id(is_tv_mode) = false;
           id(is_tv_idle) = false;
           lv_obj_set_style_bg_color(id(artwork_bg_panel), lv_color_make(0, 0, 0), 0);
-          lv_obj_set_size(id(album_art_background_widget), 720, 720);
+          lv_obj_set_size(id(album_art_background_widget), ${artwork_display_size}, ${artwork_display_size});
           lv_obj_set_pos(id(album_art_background_widget), 0, 0);
       - lvgl.widget.show: media_play_pause_button
       - lvgl.widget.show: media_time_label
@@ -704,7 +831,7 @@ script:
                 std::string path = id(media_entity_picture_sensor).state;
                 while (!path.empty() && (path.back() == '\n' || path.back() == '\r' || path.back() == ' ')) path.pop_back();
                 id(last_artwork_url) = (path.substr(0, 7) == "http://" || path.substr(0, 8) == "https://") ? path : (id(ha_base_url) + path);
-                id(last_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_artwork_url), 720);
+                id(last_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_artwork_url), ${artwork_size});
             - artwork_image.set_url:
                 id: album_art_background
                 url: !lambda 'return id(last_artwork_url);'
@@ -715,8 +842,9 @@ script:
 
 display:
   - platform: mipi_dsi
-    model: WAVESHARE-P4-86-PANEL
-    id: my_display
-    reset_pin: GPIO27
+    model: JC1060P470
+    id: tft_display
+    reset_pin: GPIO5
+    hsync_pulse_width: 20
     color_order: RGB
     auto_clear_enabled: false
