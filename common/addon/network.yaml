@@ -26,8 +26,9 @@ wifi:
     - lvgl.widget.hide: setup_prompt
     - if:
         condition:
-          lambda: 'return !id(device_has_been_setup) && !id(boot_grace_period);'
+          lambda: 'return !id(device_has_been_setup);'
         then:
+          - lvgl.widget.hide: loading_screen
           - lvgl.widget.show: wifi_setup_prompt
     - lvgl.widget.hide: ha_setup_prompt
 
@@ -45,6 +46,15 @@ esphome:
             lv_label_set_text(id(actions_instructions), actions_text.c_str());
         - delay: 2s
         - script.execute: apply_timezone
+        - if:
+            condition:
+              and:
+                - lambda: 'return !id(device_has_been_setup);'
+                - not:
+                    wifi.connected:
+            then:
+              - lvgl.widget.hide: loading_screen
+              - lvgl.widget.show: wifi_setup_prompt
         - delay: 10s
         - lambda: 'id(boot_grace_period) = false;'
         - lvgl.widget.hide: loading_screen
