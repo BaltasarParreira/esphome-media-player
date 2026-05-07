@@ -42,7 +42,7 @@ esphome:
           transition_length: 500ms
       - script.execute: backlight_wake_timeout
   platformio_options:
-    board_build.arduino.memory_type: qio_opi   # --> Bal
+    board_build.arduino.memory_type: qio_qspi   # --> Bal
     board_upload.maximum_ram_size: 524288   # --> Bal
     board_build.flash_mode: dio
     build_flags:
@@ -55,7 +55,7 @@ esphome:
 
 
 psram:
-  mode: opi
+  mode: octal
   speed: 120MHz
 
 
