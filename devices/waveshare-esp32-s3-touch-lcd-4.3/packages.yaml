@@ -1,0 +1,55 @@
+substitutions:
+  # Native LVGL display rotation in degrees. ESPHome 2026.4 rotates touch input
+  # through LVGL too. 90 is the default landscape layout; 0/180 use portrait.
+  display_rotation: "0"
+
+  # Device profile
+  screen_width: "800"
+  screen_height: "480"
+  artwork_size: "480"
+  artwork_display_size: "480"
+  clock_cx: "400"
+  clock_cy: "240"
+  device_slug: "waveshare-esp32-s3-touch-lcd-4.3"
+  firmware_manifest_slug: "ws-touch-lcd-4.3"
+  post_artwork_script: "apply_warm_tones"
+  warm_tone_post_script: "warm_tones_done"
+  warm_tone_red_boost: "0.11f"
+  warm_tone_green_reduce: "0.22f"
+  warm_tone_blue_reduce: "0.28f"
+  artwork_contrast_boost: "0.04f"
+  artwork_saturation_boost: "0.10f"
+  track_info_duration_default: "0"
+  pause_lvgl_on_screen_off: "true"
+  clock_screensaver_supported: "true"
+  idle_action_default: "Clock"
+  screen_schedule_internal: "true"
+  ha_config_internal: "true"
+
+  # Setup screens
+  setup_content_width: "560"
+  setup_pad_row: "14"
+  setup_instructions_pad_top: "8"
+  setup_icon_font: "icon_font_setup"
+  setup_button_width: "180"
+  setup_button_height: "44"
+  setup_button_radius: "22"
+  setup_button_font: "roboto19_font"
+  loading_pad_row: "14"
+  loading_bar_width: "80"
+  loading_bar_height: "4"
+  loading_bar_radius: "3"
+  loading_bar_pad_top: "18"
+
+packages:
+  # Common
+  base: !include ../../common/device/base.yaml
+  warm_tones: !include ../../common/addon/warm_tones.yaml
+  web_settings: !include ../../common/addon/web_settings.yaml
+
+  # Device-specific
+  device: !include device/device.yaml
+  lvgl: !include device/lvgl.yaml
+  fonts: !include assets/fonts.yaml
+  icons: !include assets/icons.yaml
+  button: !include theme/button.yaml
