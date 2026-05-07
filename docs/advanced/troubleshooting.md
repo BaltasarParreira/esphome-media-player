@@ -27,6 +27,19 @@ Album art is loaded from your Home Assistant instance. If it isn't appearing:
 - Check that the device and Home Assistant are on the same network.
 - Try adding the device manually under **Settings → Devices & Services → Add Integration → ESPHome** using the device's IP address.
 
+## Firmware compile fails while copying LVGL
+
+If an ESP32-P4 compile fails with `shutil.Error` while copying `lvgl__lvgl` into `managed_components`, ESPHome has a partially written build cache. This can happen after an interrupted or failed compile, and retrying without cleaning usually hits the same cached folder again.
+
+In the ESPHome dashboard, open the device menu and choose **Clean Build Files**, then compile again. If you are using ESPHome from a terminal, run:
+
+```bash
+esphome clean /config/music-7inch.yaml
+esphome compile /config/music-7inch.yaml
+```
+
+If the dashboard clean option is not available, delete the affected build folder under `/config/.esphome/build/` for that device and compile again.
+
 ## The screen is black / not responding
 
 - Verify the device is powered via the USB-C port with an adequate power supply (5V 2A recommended).
