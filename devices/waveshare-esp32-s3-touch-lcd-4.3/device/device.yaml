@@ -50,8 +50,8 @@ esphome:
       - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
       - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
       - "-Wno-deprecated-declarations"
-      - "-DBOARD_HAS_PSRAM"   # --> Bal
-  min_version: "2025.8.0"
+      - "-DBOARD_HAS_PSRAM"
+  min_version: "2025.8.0"   # --> Bal
 
 
 psram:
@@ -706,11 +706,11 @@ script:
 
 
 # -----------------------------------------------------------------------------
-# DISPLAY (MIPI DSI - JC8012P4A1)
+# DISPLAY (MIPI ESP32-S3-TOUCH-LCD-4.3)
 # -----------------------------------------------------------------------------
 display:
   - platform: mipi_rgb
-    model: ESP32-S3-TOUCH-LCD-7-800X480
+    model: ESP32-S3-TOUCH-LCD-4.3
     id: tft_display
     update_interval: never
     auto_clear_enabled: false
