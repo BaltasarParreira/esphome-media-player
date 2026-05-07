@@ -42,7 +42,6 @@ esphome:
           transition_length: 500ms
       - script.execute: backlight_wake_timeout
   platformio_options:
-    build_flags: "-DBOARD_HAS_PSRAM"   # --> Bal
     board_build.arduino.memory_type: qio_opi   # --> Bal
     board_upload.maximum_ram_size: 524288   # --> Bal
     board_build.flash_mode: dio
@@ -51,6 +50,7 @@ esphome:
       - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
       - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
       - "-Wno-deprecated-declarations"
+      - "-DBOARD_HAS_PSRAM"   # --> Bal
   min_version: "2025.8.0"
 
 
