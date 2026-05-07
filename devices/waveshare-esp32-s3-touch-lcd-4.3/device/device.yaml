@@ -1,5 +1,5 @@
 # =============================================================================
-# HARDWARE CONFIGURATION - Guition ESP32-P4-JC8012P4A1
+# HARDWARE CONFIGURATION - Waveshare ESP32-S3-Touch-LCD-4.3
 # =============================================================================
 # Hardware settings for the ESP32-P4 10.1" 1280x800 landscape touchscreen.
 # Uses MIPI DSI display, GSL3680 touch controller, and ESP32-C6 coprocessor
@@ -21,9 +21,9 @@ esp32:
       CONFIG_HTTPD_MAX_URI_LEN: "128"
       CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
-      CONFIG_ESP32S3_DATA_CACHE_64KB: y
-      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
-      CONFIG_SPIRAM_RODATA: y
+#      CONFIG_ESP32S3_DATA_CACHE_64KB: y
+#      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+#      CONFIG_SPIRAM_RODATA: y
     advanced:
       enable_idf_experimental_features: true
 
