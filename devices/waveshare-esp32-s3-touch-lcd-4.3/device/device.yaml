@@ -55,8 +55,8 @@ esphome:
 
 
 psram:
-  mode: octal
-  speed: 120MHz
+  mode: quad
+  speed: 40MHz
 
 
 # Hide screen during OTA to avoid flicker
