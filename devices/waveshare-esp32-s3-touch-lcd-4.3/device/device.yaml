@@ -27,7 +27,7 @@ esp32:
       CONFIG_FREERTOS_HZ: "1000"
       CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240: "y"
       CONFIG_ESPTOOLPY_FLASHMODE_QIO: "y"
-      CONFIG_ESPTOOLPY_FLASHFREQ_80M: "y"     # Must be consistent with PSRAM
+      CONFIG_ESPTOOLPY_FLASHFREQ_120M: "y"     # Must be consistent with PSRAM
       CONFIG_SPIRAM_MODE_OCT: "y"
       CONFIG_IDF_EXPERIMENTAL_FEATURES: "y"
       CONFIG_SPIRAM_SPEED_80M: "y"            # Must be consistent with FLASH
@@ -67,7 +67,7 @@ esphome:
 
 psram:
   mode: octal
-  speed: 80MHz
+  speed: 120MHz
 
 
 # Hide screen during OTA to avoid flicker
