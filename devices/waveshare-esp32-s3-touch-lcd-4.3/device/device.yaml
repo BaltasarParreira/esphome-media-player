@@ -18,8 +18,8 @@ esp32:
   framework:
     type: esp-idf
     sdkconfig_options:
-      CONFIG_HTTPD_MAX_URI_LEN: "128"
-      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
+#      CONFIG_HTTPD_MAX_URI_LEN: "128"
+#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
 #      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
 #      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
