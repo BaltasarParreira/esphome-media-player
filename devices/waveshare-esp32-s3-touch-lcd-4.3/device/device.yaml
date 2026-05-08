@@ -24,8 +24,8 @@ esp32:
 #      CONFIG_ESP32S3_DATA_CACHE_64KB: y
 #      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
 #      CONFIG_SPIRAM_RODATA: y
-    advanced:
-      enable_idf_experimental_features: true
+#    advanced:
+#      enable_idf_experimental_features: true
 
 
 esphome:
