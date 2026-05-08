@@ -20,26 +20,24 @@ esp32:
     sdkconfig_options:
 #      CONFIG_HTTPD_MAX_URI_LEN: "128"
 #      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
-#      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
-#      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
-#
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
 #      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
 #      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
 #      CONFIG_SPIRAM_RODATA: "y"
-#
-      CONFIG_FREERTOS_HZ: "1000"
-      CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240: "y"
-      CONFIG_ESPTOOLPY_FLASHMODE_QIO: "y"
-      CONFIG_ESPTOOLPY_FLASHFREQ_80M: "y"     # Must be consistent with PSRAM
-      CONFIG_SPIRAM_MODE_OCT: "y"
-      CONFIG_IDF_EXPERIMENTAL_FEATURES: "y"
-      CONFIG_SPIRAM_SPEED_80M: "y"            # Must be consistent with FLASH
-      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
-      CONFIG_SPIRAM_RODATA: "y"
-      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
-      CONFIG_COMPILER_OPTIMIZATION_PERF: "y"
-#    advanced:
-#      enable_idf_experimental_features: true
+#      CONFIG_FREERTOS_HZ: "1000"
+#      CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240: "y"
+#      CONFIG_ESPTOOLPY_FLASHMODE_QIO: "y"
+#      CONFIG_ESPTOOLPY_FLASHFREQ_80M: "y"     # Must be consistent with PSRAM
+#      CONFIG_SPIRAM_MODE_OCT: "y"
+#      CONFIG_IDF_EXPERIMENTAL_FEATURES: "y"
+#      CONFIG_SPIRAM_SPEED_120M: "y"            # Must be consistent with FLASH
+#      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+#      CONFIG_SPIRAM_RODATA: "y"
+#      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+#      CONFIG_COMPILER_OPTIMIZATION_PERF: "y"
+    advanced:
+      enable_idf_experimental_features: true
 
 
 esphome:
@@ -751,13 +749,13 @@ display:
     #vsync_back_porch: 16
     #vsync_front_porch: 16
     #vsync_pulse_width: 8
-    # Standard timings for Waveshare 4.3"
-    hsync_pulse_width: 30
-    hsync_back_porch: 30
-    hsync_front_porch: 210
+    # Verified timings for Waveshare ESP32-S3-Touch-LCD-4.3
+    hsync_pulse_width: 4
+    hsync_back_porch: 8
+    hsync_front_porch: 8
     vsync_pulse_width: 4
-    vsync_back_porch: 4
-    vsync_front_porch: 4
+    vsync_back_porch: 8
+    vsync_front_porch: 8
     data_pins:
       red:
         - 1         #r3
