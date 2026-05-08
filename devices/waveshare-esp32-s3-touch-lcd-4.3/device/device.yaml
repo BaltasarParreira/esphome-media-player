@@ -17,15 +17,15 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
-#    sdkconfig_options:
-#      CONFIG_HTTPD_MAX_URI_LEN: "128"
-#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
-#      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+    sdkconfig_options:
+      CONFIG_HTTPD_MAX_URI_LEN: "128"
+      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
 #      CONFIG_ESP32S3_DATA_CACHE_64KB: y
 #      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
 #      CONFIG_SPIRAM_RODATA: y
-#    advanced:
-#      enable_idf_experimental_features: true
+    advanced:
+      enable_idf_experimental_features: true
 
 
 esphome:
@@ -47,9 +47,9 @@ esphome:
     board_build.flash_mode: dio
     build_flags:
       - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-#      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
-#      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
-#      - "-Wno-deprecated-declarations"
+      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
+      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
+      - "-Wno-deprecated-declarations"
       - "-DBOARD_HAS_PSRAM"
   min_version: "2025.8.0"   # --> Bal
 
