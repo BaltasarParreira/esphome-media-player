@@ -35,8 +35,8 @@ esp32:
 #      CONFIG_SPIRAM_RODATA: "y"
 #      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
 #      CONFIG_COMPILER_OPTIMIZATION_PERF: "y"
-#    advanced:
-#      enable_idf_experimental_features: true
+    advanced:
+      enable_idf_experimental_features: true
 
 
 esphome:
@@ -61,7 +61,7 @@ esphome:
       - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
       - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
       - "-Wno-deprecated-declarations"
-      - "-DBOARD_HAS_PSRAM"
+#      - "-DBOARD_HAS_PSRAM"
   min_version: "2025.8.0"   # --> Bal
 
 
