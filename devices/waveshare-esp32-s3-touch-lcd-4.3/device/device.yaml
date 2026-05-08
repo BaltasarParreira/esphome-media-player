@@ -20,7 +20,8 @@ esp32:
     sdkconfig_options:
 #      CONFIG_HTTPD_MAX_URI_LEN: "128"
 #      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
-      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
 #      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
 #      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
 #      CONFIG_SPIRAM_RODATA: "y"
@@ -725,6 +726,8 @@ display:
     id: tft_display
     update_interval: never
     auto_clear_enabled: false
+    # Allocates a buffer in internal SRAM to bridge the PSRAM gap
+    bounce_buffer_size_px: 16000 # Adjust based on your screen width
     color_order: RGB
     pclk_frequency: 16MHZ
     dimensions:
