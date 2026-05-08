@@ -1,11 +1,10 @@
 # =============================================================================
-# HARDWARE CONFIGURATION - Guition ESP32-P4-JC8012P4A1
+# HARDWARE CONFIGURATION - Waveshare ESP32-S3-Touch-LCD-7
 # =============================================================================
-# Hardware settings for the ESP32-P4 10.1" 1280x800 landscape touchscreen.
-# Uses MIPI DSI display, GSL3680 touch controller, and ESP32-C6 coprocessor
-# for WiFi/BT connectivity.
+# Hardware settings for the ESP32-s3 7" 800x480 landscape touchscreen.
+# Uses MIPI DSI display, GT911 touch controller.
 #
-# WARNING: These settings are specific to the Guition ESP32-P4-JC8012P4A1.
+# WARNING: These settings are specific to the Waveshare ESP32-S3-Touch-LCD-7.
 #          Using this config with a different device may cause issues.
 # =============================================================================
 
@@ -18,9 +17,9 @@ esp32:
   framework:
     type: esp-idf
     sdkconfig_options:
-      CONFIG_HTTPD_MAX_URI_LEN: "128"
-      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
-      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+#      CONFIG_HTTPD_MAX_URI_LEN: "128"
+#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
       # Force Mbed TLS to use your 8MB/16MB PSRAM instead of scarce internal RAM
 #      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       # Ensure PSRAM is being used for the HTTP client allocation
