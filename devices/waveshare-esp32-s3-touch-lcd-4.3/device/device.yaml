@@ -46,7 +46,7 @@ esphome:
     board_upload.maximum_ram_size: 524288   # --> Bal
     board_build.flash_mode: dio
     build_flags:
-#      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
+      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
 #      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
 #      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
 #      - "-Wno-deprecated-declarations"
