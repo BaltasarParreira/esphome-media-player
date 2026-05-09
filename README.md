@@ -1,5 +1,7 @@
 This is my Fork from the great work from @jtenniswood - esphome-media-player so it supports #  the Waveshare ESP32-S3-Touch-LCD-7 !!!
 
+https://docs.waveshare.com/assets/images/ESP32-S3-Touch-LCD-7-1-75916f2f56374e5a1216bbaad0a7ea53.webp
+
 It is not 100% yet stable regarding the WIFI and the cover art download but it's working most of the times with this ESP32/LCD device.
 
 It works in landscape mode and I didn't test much in portrait, but the code can handle the screen rotation, just didn't loose too much time on it as I wanted this to work mainly in landscape.
@@ -7,6 +9,9 @@ It works in landscape mode and I didn't test much in portrait, but the code can 
 Anyone with better aproach or sugestions feel free to comment.
 
 07/05/2026 - Added support for the Waveshare ESP32-S3-Touch-LCD-4.3.
+
+https://docs.waveshare.com/assets/images/ESP32-S3-Touch-LCD-4.3-1-78b46cc0b6805f2016035291b09fc98a.webp
+
 Still not 100% stable (some screen flickering when using web/internet) but already working.  ; )
 
 -------------------------------------------------------------------------------------------------------------------------------
