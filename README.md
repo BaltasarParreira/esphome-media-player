@@ -6,6 +6,9 @@ It works in landscape mode and I didn't test much in portrait, but the code can 
 
 Anyone with better aproach or sugestions feel free to comment.
 
+07/05/2026 - Added support for the Waveshare ESP32-S3-Touch-LCD-4.3.
+Still not 100% stable (some screen flickering when using web/internet) but already working.  ; )
+
 -------------------------------------------------------------------------------------------------------------------------------
 
 # ESPHome Media Player for Home Assistant
