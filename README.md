@@ -1,4 +1,4 @@
-This is my Fork from the great work from @jtenniswood - esphome-media-player so it supports #  the Waveshare ESP32-S3-Touch-LCD-7 !!!
+This is my Fork from the great work by @jtenniswood - esphome-media-player so it supports the Waveshare ESP32-S3-Touch-LCD-7 !!!
 
 <img src="https://docs.waveshare.com/assets/images/ESP32-S3-Touch-LCD-7-1-75916f2f56374e5a1216bbaad0a7ea53.webp" width="350">
 
