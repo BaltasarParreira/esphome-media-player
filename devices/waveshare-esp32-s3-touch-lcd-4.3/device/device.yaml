@@ -176,7 +176,7 @@ logger:
 output:
   - platform: ledc
     id: backlight_output
-    pin: 16 # pin: GPIO23 --> Balta
+    pin: 6 # pin: GPIO23 --> Balta
   - platform: gpio
     id: backlight_output_ws
     pin:
