@@ -150,9 +150,13 @@ class ArtworkImage : public PollingComponent,
   size_t resize_(int width, int height);
   size_t get_decode_buffer_size_() const { return get_buffer_size_(this->decode_buffer_width_, this->decode_buffer_height_); }
   void discard_decode_buffer_();
-  void promote_decode_buffer_();
+  bool promote_decode_buffer_();
   void retire_active_buffer_();
   void cleanup_retired_buffers_(bool force);
+  bool ensure_download_buffer_capacity_();
+  bool decode_buffered_data_();
+  void finish_download_();
+  void fail_download_();
 
   /**
    * @brief Draw a pixel into the buffer.

@@ -333,6 +333,11 @@ touchscreen:
     i2c_id: i2c_bus
     reset_pin: GPIO22
     interrupt_pin: GPIO21
+    calibration:
+      x_min: 0
+      x_max: 1024
+      y_min: 0
+      y_max: 600
     on_touch:
       - lambda: |-
           id(was_screen_dimmed) = id(is_screen_dimmed);
@@ -453,37 +458,37 @@ touchscreen:
 # mode: restart – cancels the in-progress run and starts fresh
 # -----------------------------------------------------------------------------
 script:
-  # -- Reapply JC1060P470 horizontal pixel-aspect compensation --
+  # -- Reapply JC1060P470 pixel-aspect compensation for selected UI --
   - id: apply_horizontal_adjustment
     mode: restart
     then:
       - lambda: |-
-          auto apply_adjustment = [](lv_obj_t *obj) {
+          const bool compensate_vertical =
+            id(screen_rotation_select).current_option() == "90" ||
+            id(screen_rotation_select).current_option() == "270";
+
+          auto apply_adjustment = [compensate_vertical](lv_obj_t *obj, bool pin_start_edge = false) {
             if (obj == nullptr) {
               return;
             }
             const lv_coord_t width = lv_obj_get_width(obj);
             const lv_coord_t height = lv_obj_get_height(obj);
-            lv_obj_set_style_transform_pivot_x(obj, width / 2, 0);
-            lv_obj_set_style_transform_pivot_y(obj, height / 2, 0);
-            lv_obj_set_style_transform_scale_x(obj, ${horizontal_adjustment_scale_x}, 0);
+            lv_obj_set_style_transform_pivot_x(obj, pin_start_edge && !compensate_vertical ? 0 : width / 2, 0);
+            lv_obj_set_style_transform_pivot_y(obj, pin_start_edge && compensate_vertical ? 0 : height / 2, 0);
+            lv_obj_set_style_transform_scale_x(obj, compensate_vertical ? 256 : ${horizontal_adjustment_scale_x}, 0);
+            lv_obj_set_style_transform_scale_y(obj, compensate_vertical ? ${horizontal_adjustment_scale_x} : 256, 0);
           };
 
-          apply_adjustment(id(album_art_background_widget));
-          apply_adjustment(id(artwork_error_label));
-          apply_adjustment(id(media_title_label));
-          apply_adjustment(id(media_artist_label));
-          apply_adjustment(id(media_time_label));
+          apply_adjustment(id(album_art_background_widget), true);
+          apply_adjustment(id(media_title_label), true);
+          apply_adjustment(id(media_artist_label), true);
+          apply_adjustment(id(media_time_label), true);
           apply_adjustment(id(media_play_pause_button));
           apply_adjustment(id(media_play_icon));
           apply_adjustment(id(media_pause_icon));
+          lv_obj_center(id(media_play_icon));
+          lv_obj_center(id(media_pause_icon));
           apply_adjustment(id(volume_arc));
-          apply_adjustment(id(volume_title_label));
-          apply_adjustment(id(volume_pct_label));
-          apply_adjustment(id(volume_down_button));
-          apply_adjustment(id(volume_down_icon));
-          apply_adjustment(id(volume_up_button));
-          apply_adjustment(id(volume_up_icon));
 
   # -- Apply Home Assistant screen-rotation dropdown using native LVGL rotation --
   - id: apply_screen_rotation
@@ -537,15 +542,15 @@ script:
           lv_obj_set_width(id(artwork_error_label), 300);
 
           if (landscape) {
-            lv_obj_set_pos(id(accent_overlay), 600, 0);
-            lv_obj_set_size(id(accent_overlay), 424, 600);
-            lv_obj_set_pos(id(track_info_text), 632, 34);
-            lv_obj_set_size(id(track_info_text), 360, 430);
-            lv_obj_set_style_max_height(id(media_title_label), 260, 0);
+            lv_obj_set_pos(id(accent_overlay), 585, 0);
+            lv_obj_set_size(id(accent_overlay), 439, 600);
+            lv_obj_set_pos(id(track_info_text), 615, 34);
+            lv_obj_set_size(id(track_info_text), 377, 430);
+            lv_obj_set_style_max_height(id(media_title_label), 340, 0);
           } else {
             lv_obj_set_pos(id(accent_overlay), 0, 600);
             lv_obj_set_size(id(accent_overlay), 600, 424);
-            lv_obj_set_pos(id(track_info_text), 40, 636);
+            lv_obj_set_pos(id(track_info_text), 40, 620);
             lv_obj_set_size(id(track_info_text), 520, 300);
             lv_obj_set_style_max_height(id(media_title_label), 170, 0);
           }
@@ -845,6 +850,8 @@ display:
     model: JC1060P470
     id: tft_display
     reset_pin: GPIO5
-    hsync_pulse_width: 20
     color_order: RGB
     auto_clear_enabled: false
+    dimensions:
+      width: 1024
+      height: 600

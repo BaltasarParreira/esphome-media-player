@@ -96,6 +96,10 @@ uint8_t *DownloadBuffer::data(size_t offset) {
 }
 
 size_t DownloadBuffer::read(size_t len) {
+  if (len > this->unread_) {
+    ESP_LOGE(TAG, "Decoder consumed %zu bytes, but only %zu were buffered", len, this->unread_);
+    len = this->unread_;
+  }
   this->unread_ -= len;
   if (this->unread_ > 0) {
     memmove(this->data(), this->data(len), this->unread_);

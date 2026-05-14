@@ -109,6 +109,12 @@ If you find this project useful, consider buying me a coffee to support ongoing 
 
 Ideas, questions, and bug reports are welcome. Please open an [issue on GitHub](https://github.com/jtenniswood/esphome-media-player/issues).
 
+## License
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md).
+
+You can view, use, share, and modify it for non-commercial purposes. Commercial use is not allowed without separate permission. Because it restricts commercial use, this is source-available rather than OSI-approved open source.
+
 ## Gallery
 
 ### Guition ESP32-P4 JC8012P4A1 (10.1")
