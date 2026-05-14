@@ -108,7 +108,9 @@ text_sensor:
                       id: album_art_background_widget
                       opa: 50%
                   - lvgl.widget.hide: artwork_error_label
-                  - delay: 50ms
+                  - script.execute: ensure_artwork_download_stagger
+                  - script.wait: ensure_artwork_download_stagger
+                  - delay: !lambda 'return static_cast<uint32_t>(50 + id(artwork_download_stagger_ms));'
                   - artwork_image.set_url:
                       id: tv_art_background
                       url: !lambda 'return id(last_tv_artwork_url);'
@@ -243,7 +245,9 @@ text_sensor:
                               - lvgl.widget.update:
                                   id: album_art_background_widget
                                   opa: 50%
-                              - delay: 50ms
+                              - script.execute: ensure_artwork_download_stagger
+                              - script.wait: ensure_artwork_download_stagger
+                              - delay: !lambda 'return static_cast<uint32_t>(50 + id(artwork_download_stagger_ms));'
                               - artwork_image.set_url:
                                   id: tv_art_background
                                   url: !lambda 'return id(last_tv_artwork_url);'

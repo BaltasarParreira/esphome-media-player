@@ -9,6 +9,9 @@ globals:
   - id: artwork_retry_pending
     type: bool
     initial_value: 'false'
+  - id: artwork_download_stagger_ms
+    type: int
+    initial_value: '-1'
 
 external_components:
   - source: github://jtenniswood/esphome-media-player@main
@@ -56,6 +59,29 @@ artwork_image:
       - script.execute: handle_artwork_error
 
 script:
+  - id: ensure_artwork_download_stagger
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: 'return id(artwork_download_stagger_ms) < 0;'
+          then:
+            - lambda: |-
+                const uint32_t window_ms = ${artwork_download_spread_ms};
+                uint32_t stagger_ms = 0;
+                if (window_ms > 0) {
+                  uint8_t mac[6] = {0, 0, 0, 0, 0, 0};
+                  esphome::get_mac_address_raw(mac);
+                  uint32_t hash = 2166136261UL;
+                  for (uint8_t byte : mac) {
+                    hash ^= byte;
+                    hash *= 16777619UL;
+                  }
+                  stagger_ms = hash % window_ms;
+                }
+                id(artwork_download_stagger_ms) = static_cast<int>(stagger_ms);
+                ESP_LOGD("artwork", "Artwork download stagger: %u ms", static_cast<unsigned>(stagger_ms));
+
   - id: apply_downloaded_artwork
     mode: queued
     then:
@@ -118,7 +144,9 @@ script:
             lambda: 'return !id(artwork_retry_pending);'
           then:
             - lambda: 'id(artwork_retry_pending) = true;'
-            - delay: 1s
+            - script.execute: ensure_artwork_download_stagger
+            - script.wait: ensure_artwork_download_stagger
+            - delay: !lambda 'return static_cast<uint32_t>(1000 + id(artwork_download_stagger_ms));'
             - lambda: |-
                 auto *img = id(is_tv_mode) ? id(tv_art_background) : id(album_art_background);
                 const std::string &url = id(is_tv_mode) ? id(last_tv_artwork_url) : id(last_artwork_url);
