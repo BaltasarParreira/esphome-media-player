@@ -9,7 +9,7 @@
 
 lvgl:
   id: main_lvgl
-  buffer_size: 25%
+  buffer_size: 50%
   byte_order: little_endian
   rotation: ${display_rotation}
   on_boot:
@@ -20,6 +20,8 @@ lvgl:
         lv_obj_set_style_pad_right(id(speakers_container), 0, LV_PART_SCROLLBAR);
         lv_obj_set_style_pad_top(id(speakers_container), 0, LV_PART_SCROLLBAR);
         lv_obj_set_style_pad_bottom(id(speakers_container), 0, LV_PART_SCROLLBAR);
+        // ESPHome's YAML schema only allows non-negative line spacing; LVGL accepts signed spacing.
+        lv_obj_set_style_text_line_space(id(media_title_label), -8, 0);
         lv_indev_t *indev = lv_indev_get_next(NULL);
         #if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 4, 0)
         if (indev) lv_indev_set_scroll_limit(indev, 20);
