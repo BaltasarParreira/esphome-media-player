@@ -755,12 +755,12 @@ display:
     #vsync_front_porch: 16
     #vsync_pulse_width: 8
     # Verified timings for Waveshare ESP32-S3-Touch-LCD-4.3
-    hsync_pulse_width: 4
-    hsync_back_porch: 8
-    hsync_front_porch: 8
+    hsync_back_porch: 30
+    hsync_front_porch: 210
+    hsync_pulse_width: 30
+    vsync_back_porch: 4
+    vsync_front_porch: 4
     vsync_pulse_width: 4
-    vsync_back_porch: 8
-    vsync_front_porch: 8
     data_pins:
       red:
         - 1         #r3
