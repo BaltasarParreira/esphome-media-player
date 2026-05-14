@@ -16,7 +16,7 @@ globals:
 external_components:
   - source: github://jtenniswood/esphome-media-player@main
     components: [artwork_image]
-    refresh: 1d
+    refresh: 1s
 
 http_request:
   id: http_req
