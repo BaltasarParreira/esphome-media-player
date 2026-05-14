@@ -19,6 +19,7 @@ static const char *const TAG = "artwork_image";
 static const char *const CONTENT_TYPE_HEADER_NAME = "content-type";
 static constexpr uint32_t RETIRED_BUFFER_GRACE_MS = 1000;
 static constexpr size_t MAX_RETIRED_BUFFERS = 2;
+static constexpr size_t MAX_DOWNLOAD_BUFFER_SIZE = 2 * 1024 * 1024;
 
 #include "image_decoder.h"
 
@@ -52,6 +53,13 @@ class InsecureLocalHttpContainer : public http_request::HttpContainer {
       this->bytes_read_ += read;
     }
     return read;
+  }
+
+  bool is_read_complete() const override {
+    if (HttpContainer::is_read_complete()) {
+      return true;
+    }
+    return this->is_chunked_ && esp_http_client_is_complete_data_received(this->client_);
   }
 
   void end() override {
@@ -394,6 +402,7 @@ std::shared_ptr<http_request::HttpContainer> ArtworkImage::get_insecure_(
 
   int content_length = esp_http_client_fetch_headers(client);
   container->content_length = content_length > 0 ? static_cast<size_t>(content_length) : 0;
+  container->set_chunked(esp_http_client_is_chunked_response(client));
   container->status_code = esp_http_client_get_status_code(client);
   container->duration_ms = millis() - start;
   return container;
@@ -412,13 +421,27 @@ void ArtworkImage::loop() {
 
   // Deferred decoder creation for AUTO format: read data for magic-byte detection
   if (!this->decoder_ && this->downloader_) {
-    size_t available = this->download_buffer_.free_capacity();
-    if (available) {
-      available = std::min(available, this->download_buffer_initial_size_);
-      auto len = this->downloader_->read(this->download_buffer_.append(), available);
-      if (len > 0) {
-        this->download_buffer_.write(len);
-        this->last_data_millis_ = millis();
+    if (!this->ensure_download_buffer_capacity_()) {
+      this->fail_download_();
+      return;
+    }
+
+    size_t available = std::min(this->download_buffer_.free_capacity(), this->download_buffer_initial_size_);
+    auto len = this->downloader_->read(this->download_buffer_.append(), available);
+    bool transfer_complete = false;
+    if (len > 0) {
+      this->download_buffer_.write(len);
+      this->last_data_millis_ = millis();
+    } else if (len < 0) {
+      ESP_LOGE(TAG, "Download failed while detecting image format: %d", len);
+      this->fail_download_();
+      return;
+    } else if (this->downloader_->is_read_complete()) {
+      transfer_complete = true;
+      if (this->download_buffer_.unread() < 12) {
+        ESP_LOGE(TAG, "Download finished before enough data was received to detect image format");
+        this->fail_download_();
+        return;
       }
     }
 
@@ -442,6 +465,9 @@ void ArtworkImage::loop() {
     }
 
     size_t total_size = this->downloader_->content_length;
+    if (total_size == 0 && transfer_complete) {
+      total_size = this->downloader_->get_bytes_read();
+    }
     if (!this->create_decoder_(resolved, total_size)) {
       this->end_connection_();
       this->download_error_callback_.call();
@@ -452,68 +478,74 @@ void ArtworkImage::loop() {
     ESP_LOGI(TAG, "Downloading image (Size: %zu)", total_size);
 
     // Feed already-buffered data to the newly created decoder
-    if (this->download_buffer_.unread() > 0) {
-      auto fed = this->decoder_->decode(this->download_buffer_.data(), this->download_buffer_.unread());
-      if (fed < 0) {
-        ESP_LOGE(TAG, "Error when decoding image.");
-        this->end_connection_();
-        this->download_error_callback_.call();
-        this->start_pending_update_();
-        return;
-      }
-      this->download_buffer_.read(fed);
+    if (!this->decode_buffered_data_()) {
+      this->fail_download_();
+      return;
+    }
+    if (this->decoder_->is_finished()) {
+      this->finish_download_();
     }
     return;
   }
 
   if (this->decoder_->is_finished()) {
-    this->promote_decode_buffer_();
-    this->log_state_("download-complete");
-    ESP_LOGD(TAG, "Image fully downloaded, read %zu bytes, width/height = %d/%d", this->downloader_->get_bytes_read(),
-             this->width_, this->height_);
-    ESP_LOGD(TAG, "Total time: %" PRIu32 "s", (uint32_t) (::time(nullptr) - this->start_time_));
-#ifdef USE_LVGL
-#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 4, 0)
-    this->get_lv_image_dsc();
-#else
-    this->get_lv_img_dsc();
-#endif
-#endif
-    this->log_state_("lvgl-descriptor-ready");
-    this->download_finished_callback_.call(false);
-    this->log_state_("download-callback-finished");
-    this->end_connection_();
-    this->start_pending_update_();
+    this->finish_download_();
     return;
   }
   if (this->downloader_ == nullptr) {
     ESP_LOGE(TAG, "Downloader not instantiated; cannot download");
     return;
   }
-  size_t available = this->download_buffer_.free_capacity();
-  if (available) {
-    available = std::min(available, this->download_buffer_initial_size_);
-    auto len = this->downloader_->read(this->download_buffer_.append(), available);
-    if (len > 0) {
-      this->download_buffer_.write(len);
-      this->last_data_millis_ = millis();
-      auto fed = this->decoder_->decode(this->download_buffer_.data(), this->download_buffer_.unread());
-      if (fed < 0) {
-        ESP_LOGE(TAG, "Error when decoding image.");
-        this->end_connection_();
-        this->download_error_callback_.call();
-        this->start_pending_update_();
-        return;
-      }
-      this->download_buffer_.read(fed);
-    } else if (millis() - this->last_data_millis_ > DOWNLOAD_STALL_TIMEOUT_MS) {
-      ESP_LOGE(TAG, "Download stalled: no data received for %" PRIu32 "ms (buffered %zu bytes)",
-               DOWNLOAD_STALL_TIMEOUT_MS, this->download_buffer_.unread());
-      this->end_connection_();
-      this->download_error_callback_.call();
-      this->start_pending_update_();
+
+  if (!this->ensure_download_buffer_capacity_()) {
+    this->fail_download_();
+    return;
+  }
+
+  size_t available = std::min(this->download_buffer_.free_capacity(), this->download_buffer_initial_size_);
+  auto len = this->downloader_->read(this->download_buffer_.append(), available);
+  if (len > 0) {
+    this->download_buffer_.write(len);
+    this->last_data_millis_ = millis();
+    if (!this->decode_buffered_data_()) {
+      this->fail_download_();
       return;
     }
+    if (this->decoder_->is_finished()) {
+      this->finish_download_();
+    }
+    return;
+  }
+
+  if (len < 0) {
+    ESP_LOGE(TAG, "Download failed while reading image data: %d", len);
+    this->fail_download_();
+    return;
+  }
+
+  if (this->downloader_->is_read_complete()) {
+    if (this->decoder_->has_unknown_download_size()) {
+      this->decoder_->set_download_size(this->downloader_->get_bytes_read());
+      ESP_LOGD(TAG, "HTTP transfer complete; inferred image size: %zu bytes", this->downloader_->get_bytes_read());
+    }
+    if (!this->decode_buffered_data_()) {
+      this->fail_download_();
+      return;
+    }
+    if (this->decoder_->is_finished()) {
+      this->finish_download_();
+      return;
+    }
+    ESP_LOGE(TAG, "HTTP transfer finished before image decoder completed");
+    this->fail_download_();
+    return;
+  }
+
+  if (millis() - this->last_data_millis_ > DOWNLOAD_STALL_TIMEOUT_MS) {
+    ESP_LOGE(TAG, "Download stalled: no data received for %" PRIu32 "ms (buffered %zu bytes)",
+             DOWNLOAD_STALL_TIMEOUT_MS, this->download_buffer_.unread());
+    this->fail_download_();
+    return;
   }
 }
 
@@ -755,10 +787,15 @@ void ArtworkImage::discard_decode_buffer_() {
   this->decode_buffer_height_ = 0;
 }
 
-void ArtworkImage::promote_decode_buffer_() {
+bool ArtworkImage::promote_decode_buffer_() {
   if (!this->decode_buffer_) {
     ESP_LOGE(TAG, "Decode finished without a decoded image buffer");
-    return;
+    return false;
+  }
+  if (this->decode_buffer_width_ <= 0 || this->decode_buffer_height_ <= 0) {
+    ESP_LOGE(TAG, "Decode finished with invalid dimensions: %dx%d", this->decode_buffer_width_,
+             this->decode_buffer_height_);
+    return false;
   }
 
   this->retire_active_buffer_();
@@ -775,6 +812,7 @@ void ArtworkImage::promote_decode_buffer_() {
 #ifdef USE_LVGL
   memset(&this->dsc_, 0, sizeof(this->dsc_));
 #endif
+  return true;
 }
 
 void ArtworkImage::retire_active_buffer_() {
@@ -803,6 +841,73 @@ void ArtworkImage::cleanup_retired_buffers_(bool force) {
       ++it;
     }
   }
+}
+
+bool ArtworkImage::ensure_download_buffer_capacity_() {
+  if (this->download_buffer_.free_capacity() > 0) {
+    return true;
+  }
+
+  size_t current_size = this->download_buffer_.size();
+  size_t target_size = current_size == 0 ? this->download_buffer_initial_size_ : current_size * 2;
+  if (target_size > MAX_DOWNLOAD_BUFFER_SIZE) {
+    target_size = MAX_DOWNLOAD_BUFFER_SIZE;
+  }
+  if (target_size <= current_size) {
+    ESP_LOGE(TAG, "Artwork download exceeded %zu bytes", MAX_DOWNLOAD_BUFFER_SIZE);
+    return false;
+  }
+
+  ESP_LOGD(TAG, "Growing download buffer from %zu to %zu bytes", current_size, target_size);
+  return this->download_buffer_.resize(target_size) == target_size;
+}
+
+bool ArtworkImage::decode_buffered_data_() {
+  if (!this->decoder_ || this->download_buffer_.unread() == 0) {
+    return true;
+  }
+
+  size_t unread = this->download_buffer_.unread();
+  auto fed = this->decoder_->decode(this->download_buffer_.data(), unread);
+  if (fed < 0) {
+    ESP_LOGE(TAG, "Error when decoding image.");
+    return false;
+  }
+  if (static_cast<size_t>(fed) > unread) {
+    ESP_LOGE(TAG, "Decoder consumed %d bytes, but only %zu were buffered", fed, unread);
+    return false;
+  }
+  this->download_buffer_.read(fed);
+  return true;
+}
+
+void ArtworkImage::finish_download_() {
+  if (!this->promote_decode_buffer_()) {
+    this->fail_download_();
+    return;
+  }
+  this->log_state_("download-complete");
+  ESP_LOGD(TAG, "Image fully downloaded, read %zu bytes, width/height = %d/%d",
+           this->downloader_ ? this->downloader_->get_bytes_read() : 0, this->width_, this->height_);
+  ESP_LOGD(TAG, "Total time: %" PRIu32 "s", (uint32_t) (::time(nullptr) - this->start_time_));
+#ifdef USE_LVGL
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 4, 0)
+  this->get_lv_image_dsc();
+#else
+  this->get_lv_img_dsc();
+#endif
+#endif
+  this->log_state_("lvgl-descriptor-ready");
+  this->download_finished_callback_.call(false);
+  this->log_state_("download-callback-finished");
+  this->end_connection_();
+  this->start_pending_update_();
+}
+
+void ArtworkImage::fail_download_() {
+  this->end_connection_();
+  this->download_error_callback_.call();
+  this->start_pending_update_();
 }
 
 void ArtworkImage::queue_pending_update_(const std::string &url) {

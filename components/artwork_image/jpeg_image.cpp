@@ -44,6 +44,10 @@ int JpegDecoder::prepare(size_t download_size) {
 }
 
 int HOT JpegDecoder::decode(uint8_t *buffer, size_t size) {
+  if (this->download_size_ == 0) {
+    ESP_LOGV(TAG, "Waiting for HTTP transfer to finish before decoding JPEG with unknown length");
+    return 0;
+  }
   if (size < this->download_size_) {
     ESP_LOGV(TAG, "Download not complete. Size: %zu/%zu", size, this->download_size_);
     return 0;

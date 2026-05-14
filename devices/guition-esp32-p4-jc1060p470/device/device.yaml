@@ -845,6 +845,5 @@ display:
     model: JC1060P470
     id: tft_display
     reset_pin: GPIO5
-    hsync_pulse_width: 20
     color_order: RGB
     auto_clear_enabled: false
