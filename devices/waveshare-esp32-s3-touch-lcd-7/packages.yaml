@@ -43,7 +43,7 @@ substitutions:
 
 packages:
   # Common
-  base: !include ../../common/device/base.yaml
+  base: !include ../../common/device/my_base.yaml
   warm_tones: !include ../../common/addon/warm_tones.yaml
   web_settings: !include ../../common/addon/web_settings.yaml
 
