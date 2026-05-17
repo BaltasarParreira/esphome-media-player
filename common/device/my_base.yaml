@@ -23,7 +23,7 @@ packages:
   time_sync: !include ../addon/my_time.yaml
   timezone: !include ../addon/timezone.yaml
   music: !include ../addon/music.yaml
-  backlight: !include ../addon/backlight.yaml
+  backlight: !include ../addon/my_backlight.yaml
   network: !include ../addon/network.yaml
   speaker_group: !include ../addon/speaker_group.yaml
   accent_color: !include ../addon/accent_color.yaml
