@@ -1,7 +1,7 @@
 # Home Assistant Time (used for play progress elapsed-time estimation in sensors.yaml)
 time:
-#  - platform: homeassistant
-  - platform: sntp
+  - platform: homeassistant
+#  - platform: sntp
     id: ha_time
     timezone: UTC0
     on_time_sync:
