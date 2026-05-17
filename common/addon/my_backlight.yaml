@@ -779,12 +779,15 @@ script:
             lv_label_set_text(id(date_label), date_str.c_str());
           }
           lv_obj_update_layout(id(clock_screensaver));
+          lv_obj_update_layout(id(clock_label));
+          lv_obj_update_layout(id(date_label));
           int cx = lv_obj_get_width(id(clock_screensaver)) / 2;
           int cy = lv_obj_get_height(id(clock_screensaver)) / 2;
           int ox = (minute * 7) % 25 - 12;
           int oy = (minute * 13) % 17 - 8;
           lv_obj_invalidate(id(clock_screensaver));
           lv_obj_invalidate(id(clock_label));
+          lv_obj_invalidate(id(date_label));
 
   - id: hide_clock_view
     mode: single
