@@ -2478,6 +2478,7 @@ lvgl:
             pad_all: 0
             scrollable: false
             scrollbar_mode: "off"
+            hidden: true
             layout:
               type: flex
               flex_flow: column
@@ -2497,3 +2498,5 @@ lvgl:
                   text_color: 0xFFFFFF
                   text: "xx xx xx"
                   text_align: center
+
+- !include ../setup/web_settings_screen.yaml
