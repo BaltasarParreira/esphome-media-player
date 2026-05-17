@@ -2498,5 +2498,3 @@ lvgl:
                   text_color: 0xFFFFFF
                   text: "xx xx xx"
                   text_align: center
-
-- !include ../setup/web_settings_screen.yaml
