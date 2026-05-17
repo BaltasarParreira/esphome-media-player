@@ -2485,7 +2485,7 @@ lvgl:
                   text_font: roboto_thin160_font
                   text_color: 0xFFFFFF
                   text: "00:00"
-      			  - label:
+              - label:
       				  id: date_label
       				  text_font: roboto_light70_font
       				  text_color: 0xFFFFFF
