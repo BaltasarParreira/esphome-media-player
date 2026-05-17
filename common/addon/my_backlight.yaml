@@ -775,7 +775,8 @@ script:
             snprintf(buf, sizeof(buf), "%d:%02d", hour, time.minute);
             lv_label_set_text(id(clock_label), buf);
             minute = time.minute;
-            lv_label_set_text(id(date_label), time.strftime("%A, %B %e"));
+            std::string date_str = time.strftime("%A, %B %e");
+            id(date_label).set_text(date_str.c_str());
           }
           lv_obj_update_layout(id(clock_screensaver));
           int cx = lv_obj_get_width(id(clock_screensaver)) / 2;
