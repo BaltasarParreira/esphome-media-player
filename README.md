@@ -14,7 +14,7 @@ Anyone with better aproach or sugestions feel free to comment.
 
 Still not 100% stable (some screen flickering when using web/internet) but already working.  ; )
 
-18/05/2026 - For the ESP32-S3-Touch-LCD-7 version date was added (day of the week, month and day of the month) under the clock for the screem saver display.
+18/05/2026 - For the ESP32-S3-Touch-LCD-7 version, date was added (day of the week, month and day of the month) under the clock for the screem saver display.
 Also here the clock hours now has leading zeros so there is no moving on the screen when time pass from one digit hour to two digits.
 
 -------------------------------------------------------------------------------------------------------------------------------
