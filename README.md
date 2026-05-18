@@ -19,6 +19,8 @@ Also here the clock hours now has leading zeros so there is no moving on the scr
 
 -------------------------------------------------------------------------------------------------------------------------------
 
+(Original text from @jtenniswood great work at https://github.com/jtenniswood/esphome-media-player)
+
 # ESPHome Media Player for Home Assistant
 
 Turn an ESP32 touchscreen into a dedicated music controller for your home.
