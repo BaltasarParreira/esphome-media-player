@@ -19,7 +19,8 @@ Also here the clock hours now has leading zeros so there is no moving on the scr
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-(Original text from @jtenniswood great work at https://github.com/jtenniswood/esphome-media-player)
+(Start of the original text from @jtenniswood great work at https://github.com/jtenniswood/esphome-media-player)
+vvvv
 
 # ESPHome Media Player for Home Assistant
 
