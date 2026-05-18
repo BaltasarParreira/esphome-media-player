@@ -14,6 +14,6 @@ time:
               ? id(ha_position_epoch)
               : id(ha_time).now().timestamp;
           }
-          //id(apply_timezone).execute();
-          // id(screen_schedule_check).execute();
+          id(apply_timezone).execute();
+          id(screen_schedule_check).execute();
           id(refresh_clock_label).execute();
