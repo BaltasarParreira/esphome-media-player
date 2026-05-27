@@ -27,7 +27,7 @@ font:
 
   - file: "gfonts://Roboto@Light"
     id: roboto_light76_font
-    size: 88
+    size: 76
     bpp: 4
     glyphs: >-
       !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
