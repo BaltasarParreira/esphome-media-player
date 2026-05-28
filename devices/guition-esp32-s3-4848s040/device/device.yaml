@@ -27,6 +27,11 @@ esp32:
   watchdog_timeout: 15s
   framework:
     type: esp-idf
+    sdkconfig_options:
+      # Restart the RGB LCD scanout at vertical blanking instead of mid-frame.
+      # Without this, an LVGL flush that overlaps the LCD scanout produces
+      # brief visible marks during full-screen updates like new album art.
+      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
 
 
 # -----------------------------------------------------------------------------
@@ -742,7 +747,10 @@ display:
     model: GUITION-4848S040
     id: my_display
     color_order: RGB
-    pclk_frequency: 8MHz
+    # 6 MHz pixel clock gives the bounce buffer more headroom during LVGL
+    # full-screen flushes (e.g. new artwork). 8 MHz still works but leaves
+    # less margin and produces brief tearing marks on heavy redraws.
+    pclk_frequency: 6MHz
     update_interval: never
     auto_clear_enabled: False
     transform:
