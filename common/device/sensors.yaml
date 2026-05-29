@@ -42,9 +42,9 @@ globals:
     type: std::string
     initial_value: '""'
 
-# Refresh progress bar and elapsed time; when playing, estimate position from
-# last HA update + elapsed time so the clock moves smoothly. Large P4 panels can
-# opt out of live LVGL redraws while retaining normal artwork and state updates.
+# Refresh elapsed time and progress; when playing, estimate position from the
+# last HA update + elapsed time. Large P4 panels can opt out of progress redraws
+# while still keeping the text time live.
 interval:
   - interval: ${playback_refresh_interval}
     then:
@@ -85,7 +85,7 @@ interval:
           }
       - if:
           condition:
-            lambda: 'return !id(web_settings_active) && ${playback_live_position_enabled};'
+            lambda: 'return !id(web_settings_active) && ${playback_live_time_enabled};'
           then:
             - lvgl.label.update:
                   id: media_time_label
@@ -120,6 +120,10 @@ interval:
                       }
                     }
                     return std::string(buf);
+      - if:
+          condition:
+            lambda: 'return !id(web_settings_active) && ${playback_live_position_enabled};'
+          then:
             - if:
                 condition:
                   lambda: 'return !id(show_progress_bar).state || id(is_tv_idle);'
