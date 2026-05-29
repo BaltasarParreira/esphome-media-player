@@ -12,6 +12,7 @@ substitutions:
   artwork_allow_zoom: "true"
   release_artwork_before_download: "false"
   playback_refresh_interval: "1s"
+  playback_live_position_enabled: "true"
   rgb565_read_expr: "data[pos] | (data[pos + 1] << 8)"
   backlight_min_visible_level: "0.0f"
   screen_schedule_internal: "true"
