@@ -57,8 +57,6 @@ esphome:
     board_build.flash_mode: dio
     build_flags:
       - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
-      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
       - "-Wno-deprecated-declarations"
 
 
@@ -201,7 +199,7 @@ logger:
 # -----------------------------------------------------------------------------
 psram:
   mode: hex
-  speed: 200MHz
+  speed: 100MHz
 
 
 # MIPI DSI PHY power rail.
@@ -479,7 +477,8 @@ script:
             lv_obj_set_style_transform_scale_y(obj, compensate_vertical ? ${horizontal_adjustment_scale_x} : 256, 0);
           };
 
-          apply_adjustment(id(album_art_background_widget), true);
+          lv_obj_set_style_transform_scale_x(id(album_art_background_widget), 256, 0);
+          lv_obj_set_style_transform_scale_y(id(album_art_background_widget), 256, 0);
           apply_adjustment(id(media_title_label), true);
           apply_adjustment(id(media_artist_label), true);
           apply_adjustment(id(media_time_label), true);
@@ -703,9 +702,11 @@ script:
       - lambda: 'id(artist_has_content) = false;'
       - lvgl.widget.hide: media_artist_label
       - lvgl.widget.hide: artwork_error_label
+      - lambda: 'id(last_tv_progress_percent) = -1;'
       - lvgl.bar.update:
           id: media_progress_bar
           value: 0
+          animated: false
       - lvgl.label.update:
           id: media_time_label
           text: "0:00"
@@ -770,10 +771,19 @@ script:
                       id(last_tv_artwork_url) = (path.substr(0, 7) == "http://" || path.substr(0, 8) == "https://") ? path : (id(ha_base_url) + path);
                       id(last_tv_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_tv_artwork_url), ${artwork_size});
                   - delay: 50ms
+                  - lvgl.image.update:
+                      id: album_art_background_widget
+                      src: album_art_placeholder
+                  - lvgl.widget.update:
+                      id: album_art_background_widget
+                      opa: 50%
+                  - artwork_image.release: tv_art_background
+                  - delay: 100ms
                   - artwork_image.set_url:
                       id: tv_art_background
                       url: !lambda 'return id(last_tv_artwork_url);'
       - script.execute: show_track_view
+      - script.execute: refresh_progress_bar_from_state
       - logger.log: "Entered linked media player mode"
 
   - id: exit_tv_mode
@@ -837,10 +847,19 @@ script:
                 while (!path.empty() && (path.back() == '\n' || path.back() == '\r' || path.back() == ' ')) path.pop_back();
                 id(last_artwork_url) = (path.substr(0, 7) == "http://" || path.substr(0, 8) == "https://") ? path : (id(ha_base_url) + path);
                 id(last_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_artwork_url), ${artwork_size});
+            - lvgl.image.update:
+                id: album_art_background_widget
+                src: album_art_placeholder
+            - lvgl.widget.update:
+                id: album_art_background_widget
+                opa: 50%
+            - artwork_image.release: album_art_background
+            - delay: 100ms
             - artwork_image.set_url:
                 id: album_art_background
                 url: !lambda 'return id(last_artwork_url);'
       - script.execute: show_track_view
+      - script.execute: refresh_progress_bar_from_state
       - logger.log: "Exited linked media player mode"
 
 

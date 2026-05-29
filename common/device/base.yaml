@@ -9,10 +9,27 @@ substitutions:
   image_byte_order: "little_endian"
   artwork_image_buffer_size: "65536"
   artwork_download_spread_ms: "2000"
+  artwork_allow_zoom: "true"
+  release_artwork_before_download: "false"
+  playback_refresh_interval: "1s"
+  playback_progress_bar_range: "100"
+  playback_live_time_enabled: "true"
+  playback_live_position_enabled: "true"
   rgb565_read_expr: "data[pos] | (data[pos + 1] << 8)"
   backlight_min_visible_level: "0.0f"
   screen_schedule_internal: "true"
   ha_config_internal: "false"
+
+preferences:
+  # The dashboard UI keeps display buffers in external RAM while ESPHome also
+  # restores many settings. Avoid the default 1-minute flash flush while the UI
+  # is running; explicit sync calls still save critical setup changes.
+  flash_write_interval: never
+
+safe_mode:
+  # Safe mode marks a boot successful after 60s, which also writes to flash.
+  # On display-heavy builds this can collide with active LVGL/PSRAM traffic.
+  disabled: true
 
 globals:
   - id: web_settings_active

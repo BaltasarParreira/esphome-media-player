@@ -21,8 +21,17 @@
 esp32:
   board: esp32-s3-devkitc-1
   flash_size: 16MB
+  # ESPHome 2026.5 tightened the ESP32 idle/watchdog timing. This display can
+  # briefly block while LVGL and artwork buffers are busy, so keep watchdog
+  # protection enabled but allow the same 15s window ESPHome uses for OTA.
+  watchdog_timeout: 15s
   framework:
     type: esp-idf
+    sdkconfig_options:
+      # Restart the RGB LCD scanout at vertical blanking instead of mid-frame.
+      # Without this, an LVGL flush that overlaps the LCD scanout produces
+      # brief visible marks during full-screen updates like new album art.
+      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
 
 
 # -----------------------------------------------------------------------------
@@ -585,9 +594,11 @@ script:
       - lambda: 'id(artist_has_content) = false;'
       - lvgl.widget.hide: media_artist_label
       - lvgl.widget.hide: artwork_error_label
+      - lambda: 'id(last_tv_progress_percent) = -1;'
       - lvgl.bar.update:
           id: media_progress_bar
           value: 0
+          animated: false
       - lvgl.label.update:
           id: media_time_label
           text: "0:00"
@@ -656,6 +667,7 @@ script:
                       id: tv_art_background
                       url: !lambda 'return id(last_tv_artwork_url);'
       - script.execute: show_track_view
+      - script.execute: refresh_progress_bar_from_state
       - logger.log: "Entered linked media player mode"
 
   - id: exit_tv_mode
@@ -729,6 +741,7 @@ script:
                 id: album_art_background
                 url: !lambda 'return id(last_artwork_url);'
       - script.execute: show_track_view
+      - script.execute: refresh_progress_bar_from_state
       - logger.log: "Exited linked media player mode"
 
 
@@ -738,7 +751,10 @@ display:
     model: GUITION-4848S040
     id: my_display
     color_order: RGB
-    pclk_frequency: 8MHz
+    # 6 MHz pixel clock gives the bounce buffer more headroom during LVGL
+    # full-screen flushes (e.g. new artwork). 8 MHz still works but leaves
+    # less margin and produces brief tearing marks on heavy redraws.
+    pclk_frequency: 6MHz
     update_interval: never
     auto_clear_enabled: False
     transform:

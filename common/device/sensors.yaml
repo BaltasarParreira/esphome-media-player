@@ -17,6 +17,9 @@ globals:
   - id: last_media_position
     type: float
     initial_value: '0.0'
+  - id: last_media_progress_percent
+    type: int
+    initial_value: '-1'
   - id: last_position_timestamp
     type: int
     initial_value: '0'
@@ -42,10 +45,10 @@ globals:
     type: std::string
     initial_value: '""'
 
-# Refresh progress bar and elapsed time every second; when playing, estimate
-# position from last HA update + elapsed time so the clock moves smoothly
+# Refresh elapsed time from the last Home Assistant position anchor. The progress
+# bar redraws on a reduced range without LVGL animation, keeping movement light.
 interval:
-  - interval: 1s
+  - interval: ${playback_refresh_interval}
     then:
       - lambda: |-
           float dur, pos;
@@ -60,6 +63,7 @@ interval:
               pos = id(tv_media_position_sensor).state + (float)(t.timestamp - id(tv_ha_position_epoch));
             } else if (playing && t.is_valid() && id(last_tv_position_timestamp) != 0) {
               pos = id(last_tv_media_position) + (float)(t.timestamp - id(last_tv_position_timestamp));
+              id(last_tv_position_timestamp) = t.timestamp;
             } else {
               pos = id(tv_media_position_sensor).has_state() ? id(tv_media_position_sensor).state : id(last_tv_media_position);
             }
@@ -75,6 +79,7 @@ interval:
               pos = id(media_position_sensor).state + (float)(t.timestamp - id(ha_position_epoch));
             } else if (playing && t.is_valid() && id(last_position_timestamp) != 0) {
               pos = id(last_media_position) + (float)(t.timestamp - id(last_position_timestamp));
+              id(last_position_timestamp) = t.timestamp;
             } else {
               pos = id(media_position_sensor).has_state() ? id(media_position_sensor).state : id(last_media_position);
             }
@@ -84,7 +89,7 @@ interval:
           }
       - if:
           condition:
-            lambda: 'return !id(web_settings_active);'
+            lambda: 'return !id(web_settings_active) && ${playback_live_time_enabled};'
           then:
             - lvgl.label.update:
                   id: media_time_label
@@ -119,27 +124,100 @@ interval:
                       }
                     }
                     return std::string(buf);
-            - if:
-                condition:
-                  lambda: 'return !id(show_progress_bar).state || id(is_tv_idle);'
-                then:
-                  - lvgl.widget.hide: media_progress_bar
-                else:
-                  - lvgl.widget.show: media_progress_bar
-                  - lvgl.bar.update:
-                      id: media_progress_bar
-                      value: !lambda |-
-                        float pos = id(is_tv_mode) ? id(last_tv_media_position) : id(last_media_position);
-                        float dur;
-                        if (id(is_tv_mode)) {
-                          dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
-                        } else {
-                          dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
-                        }
-                        if (dur > 0) return (int)((pos / dur) * 100.0f);
-                        return 0;
+      - if:
+          condition:
+            lambda: 'return !id(web_settings_active);'
+          then:
+            - lambda: |-
+                bool should_show = id(show_progress_bar).state && !id(is_tv_idle);
+                bool is_hidden = lv_obj_has_flag(id(media_progress_bar), LV_OBJ_FLAG_HIDDEN);
+
+                if (!should_show) {
+                  if (!is_hidden) {
+                    lv_obj_add_flag(id(media_progress_bar), LV_OBJ_FLAG_HIDDEN);
+                  }
+                  id(last_media_progress_percent) = -1;
+                  id(last_tv_progress_percent) = -1;
+                  return;
+                }
+
+                if (is_hidden) {
+                  lv_obj_clear_flag(id(media_progress_bar), LV_OBJ_FLAG_HIDDEN);
+                  if (id(is_tv_mode)) {
+                    id(last_tv_progress_percent) = -1;
+                  } else {
+                    id(last_media_progress_percent) = -1;
+                  }
+                  id(refresh_progress_bar_from_state).execute();
+                }
+      - if:
+          condition:
+            lambda: 'return !id(web_settings_active) && ${playback_live_position_enabled} && id(show_progress_bar).state && !id(is_tv_idle);'
+          then:
+            - script.execute: refresh_progress_bar_from_state
 
 script:
+  - id: refresh_progress_bar_from_state
+    mode: restart
+    then:
+      - lambda: |-
+          if (id(web_settings_active) || !id(show_progress_bar).state || id(is_tv_idle)) {
+            return;
+          }
+
+          const bool tv_mode = id(is_tv_mode);
+          float dur = tv_mode && id(tv_media_duration_sensor).has_state()
+              ? id(tv_media_duration_sensor).state
+              : (!tv_mode && id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f);
+          float pos = tv_mode ? id(last_tv_media_position) : id(last_media_position);
+          bool playing = tv_mode
+              ? (id(tv_media_player_state_sensor).has_state() && id(tv_media_player_state_sensor).state == "playing")
+              : (id(media_player_state_sensor).has_state() && id(media_player_state_sensor).state == "playing");
+
+          auto t = id(ha_time).now();
+          if (playing && t.is_valid()) {
+            if (tv_mode && id(tv_ha_position_epoch) != 0 && id(tv_media_position_sensor).has_state()) {
+              pos = id(tv_media_position_sensor).state + (float)(t.timestamp - id(tv_ha_position_epoch));
+            } else if (!tv_mode && id(ha_position_epoch) != 0 && id(media_position_sensor).has_state()) {
+              pos = id(media_position_sensor).state + (float)(t.timestamp - id(ha_position_epoch));
+            }
+          }
+
+          if (pos < 0) pos = 0;
+          if (dur > 0.0f && pos > dur) pos = dur;
+
+          if (tv_mode) {
+            id(last_tv_media_position) = pos;
+            if (t.is_valid()) id(last_tv_position_timestamp) = t.timestamp;
+          } else {
+            id(last_media_position) = pos;
+            if (t.is_valid()) id(last_position_timestamp) = t.timestamp;
+          }
+
+          const int progress_range = ${playback_progress_bar_range};
+          int value = 0;
+          if (dur > 0.0f) {
+            value = (int)((pos / dur) * (float)progress_range + 0.5f);
+          }
+          if (value < 0) value = 0;
+          if (value > progress_range) value = progress_range;
+
+          if (lv_obj_has_flag(id(media_progress_bar), LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_clear_flag(id(media_progress_bar), LV_OBJ_FLAG_HIDDEN);
+          }
+
+          if (tv_mode) {
+            if (value == id(last_tv_progress_percent)) return;
+            id(last_tv_progress_percent) = value;
+          } else {
+            if (value == id(last_media_progress_percent)) return;
+            id(last_media_progress_percent) = value;
+          }
+
+          lv_bar_set_range(id(media_progress_bar), 0, progress_range);
+          lv_obj_set_style_anim_duration(id(media_progress_bar), 0, LV_PART_MAIN);
+          lv_bar_set_value(id(media_progress_bar), value, LV_ANIM_OFF);
+
   # Start the hide timer only (no show). Used when artwork finishes loading or when
   # playback starts. After duration seconds, hides overlay if still playing and visible.
   # mode: restart so re-triggering (e.g. new artwork) restarts the timer.
@@ -176,6 +254,18 @@ script:
             lambda: 'return !id(web_settings_active);'
           then:
             - lvgl.widget.hide: artwork_error_label
+            - if:
+                condition:
+                  lambda: 'return ${release_artwork_before_download};'
+                then:
+                  - lvgl.image.update:
+                      id: album_art_background_widget
+                      src: album_art_placeholder
+                  - lvgl.widget.update:
+                      id: album_art_background_widget
+                      opa: 50%
+                  - artwork_image.release: album_art_background
+                  - delay: 100ms
             - artwork_image.set_url:
                 id: album_art_background
                 url: !lambda 'return id(last_artwork_url);'
@@ -217,6 +307,7 @@ text_sensor:
                 then:
                   - lambda: |-
                       id(last_media_position) = 0.0f;
+                      id(last_media_progress_percent) = -1;
                       id(ha_position_epoch) = 0;
                       auto t = id(ha_time).now();
                       if (t.is_valid()) {
@@ -231,6 +322,8 @@ text_sensor:
                   - lvgl.bar.update:
                       id: media_progress_bar
                       value: 0
+                      animated: false
+                  - script.execute: refresh_progress_bar_from_state
                 else:
                   - lambda: 'id(title_received_once) = true;'
 
@@ -345,12 +438,14 @@ text_sensor:
                             id(last_artwork_url) = esphome::artwork_image::cap_artwork_url(id(last_artwork_url), ${artwork_size});
                         - script.execute: debounce_artwork_download
                   - script.execute: start_hide_track_info_timer
+                  - script.execute: refresh_progress_bar_from_state
                 else:
                   - if:
                       condition:
                         lambda: 'return x == "idle" || x == "off" || x == "standby";'
                       then:
                         - script.execute: delayed_idle_cleanup
+                        - script.execute: refresh_progress_bar_from_state
                       else:
                         - script.stop: delayed_idle_cleanup
                         - script.stop: start_hide_track_info_timer
@@ -360,6 +455,7 @@ text_sensor:
                         - lvgl.widget.hide:
                             id: media_pause_icon
                         - script.execute: backlight_wake_timeout
+                        - script.execute: refresh_progress_bar_from_state
 
   - platform: template
     id: media_position_updated_at_sensor
@@ -381,7 +477,15 @@ text_sensor:
                 id(ha_position_epoch) = epoch;
                 if (id(media_position_sensor).has_state()) {
                   id(last_position_timestamp) = epoch;
+                  float anchor = id(media_position_sensor).state;
+                  auto t = id(ha_time).now();
+                  if (t.is_valid()) {
+                    anchor += (float)(t.timestamp - epoch);
+                  }
+                  if (anchor < 0.0f) anchor = 0.0f;
+                  id(last_media_position) = anchor;
                 }
+            - script.execute: refresh_progress_bar_from_state
 
   - platform: template
     id: media_source_sensor
@@ -401,6 +505,12 @@ text_sensor:
 sensor:
   - platform: template
     id: media_duration_sensor
+    on_value:
+      - if:
+          condition:
+            lambda: 'return !id(is_tv_mode);'
+          then:
+            - script.execute: refresh_progress_bar_from_state
 
   - platform: template
     id: media_position_sensor
@@ -411,12 +521,17 @@ sensor:
           then:
             - lambda: |-
                 id(last_media_position) = x;
+                auto t = id(ha_time).now();
                 if (id(ha_position_epoch) != 0) {
                   id(last_position_timestamp) = id(ha_position_epoch);
+                  if (t.is_valid()) {
+                    id(last_media_position) = x + (float)(t.timestamp - id(ha_position_epoch));
+                  }
                 } else {
-                  auto t = id(ha_time).now();
                   if (t.is_valid()) id(last_position_timestamp) = t.timestamp;
                 }
+                if (id(last_media_position) < 0.0f) id(last_media_position) = 0.0f;
+            - script.execute: refresh_progress_bar_from_state
 
   - platform: template
     id: media_volume_sensor
