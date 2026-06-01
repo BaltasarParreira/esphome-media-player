@@ -154,7 +154,7 @@ select:
 
 logger:
   level: DEBUG
-  hardware_uart: USB_SERIAL_JTAG
+  hardware_uart: UART0
   baud_rate: 115200
 
 
