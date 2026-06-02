@@ -18,6 +18,9 @@
 # -----------------------------------------------------------------------------
 # CUSTOM DAY/NIGHT SENSOR STATE
 # -----------------------------------------------------------------------------
+substitutions:
+  backlight_dim_transition_length: "3s"
+
 globals:
   - id: custom_day_night_is_day
     type: bool
@@ -114,7 +117,11 @@ number:
                       ? (!id(sun_state_sensor).has_state() || id(sun_state_sensor).state == "above_horizon")
                       : id(custom_day_night_is_day);
                   float pct = is_day ? x : id(backlight_night_active_brightness).state;
-                  if (!(pct > 0.0f)) return 0.0f;
+                  float raw_pct = pct;
+                  if (!(pct > 0.0f)) pct = is_day ? 100.0f : 80.0f;
+                  if (pct < 5.0f) pct = 5.0f;
+                  if (pct > 100.0f) pct = 100.0f;
+                  ESP_LOGI("backlight", "Active brightness set: %.0f%% (%s, raw=%.0f%%)", pct, is_day ? "day" : "night", raw_pct);
                   return ${backlight_min_visible_level} + (pct / 100.0f) * (1.0f - ${backlight_min_visible_level});
                 transition_length: 500ms
 
@@ -143,7 +150,11 @@ number:
                       ? (!id(sun_state_sensor).has_state() || id(sun_state_sensor).state == "above_horizon")
                       : id(custom_day_night_is_day);
                   float pct = is_day ? id(backlight_day_active_brightness).state : x;
-                  if (!(pct > 0.0f)) return 0.0f;
+                  float raw_pct = pct;
+                  if (!(pct > 0.0f)) pct = is_day ? 100.0f : 80.0f;
+                  if (pct < 5.0f) pct = 5.0f;
+                  if (pct > 100.0f) pct = 100.0f;
+                  ESP_LOGI("backlight", "Active brightness set: %.0f%% (%s, raw=%.0f%%)", pct, is_day ? "day" : "night", raw_pct);
                   return ${backlight_min_visible_level} + (pct / 100.0f) * (1.0f - ${backlight_min_visible_level});
                 transition_length: 500ms
 
@@ -540,6 +551,13 @@ script:
                         float pct = id(is_screen_dimmed)
                           ? (is_day ? id(backlight_day_brightness).state : id(backlight_night_brightness).state)
                           : (is_day ? id(backlight_day_active_brightness).state : id(backlight_night_active_brightness).state);
+                        float raw_pct = pct;
+                        if (!id(is_screen_dimmed)) {
+                          if (!(pct > 0.0f)) pct = is_day ? 100.0f : 80.0f;
+                          if (pct < 5.0f) pct = 5.0f;
+                          if (pct > 100.0f) pct = 100.0f;
+                          ESP_LOGI("backlight", "Active brightness apply: %.0f%% (%s, raw=%.0f%%)", pct, is_day ? "day" : "night", raw_pct);
+                        }
                         if (!(pct > 0.0f)) return 0.0f;
                         return ${backlight_min_visible_level} + (pct / 100.0f) * (1.0f - ${backlight_min_visible_level});
                       transition_length: 500ms
@@ -598,7 +616,11 @@ script:
             float pct = is_day
               ? id(backlight_day_active_brightness).state
               : id(backlight_night_active_brightness).state;
-            if (!(pct > 0.0f)) return 0.0f;
+            float raw_pct = pct;
+            if (!(pct > 0.0f)) pct = is_day ? 100.0f : 80.0f;
+            if (pct < 5.0f) pct = 5.0f;
+            if (pct > 100.0f) pct = 100.0f;
+            ESP_LOGI("backlight", "Wake brightness: %.0f%% (%s, raw=%.0f%%)", pct, is_day ? "day" : "night", raw_pct);
             return ${backlight_min_visible_level} + (pct / 100.0f) * (1.0f - ${backlight_min_visible_level});
           transition_length: 1s
       - if:
@@ -641,7 +663,7 @@ script:
                   }
                   if (!(pct > 0.0f)) return 0.0f;
                   return ${backlight_min_visible_level} + (pct / 100.0f) * (1.0f - ${backlight_min_visible_level});
-                transition_length: 3s
+                transition_length: ${backlight_dim_transition_length}
             - delay: !lambda |-
                 float dim_s = id(backlight_dim_timeout).state;
                 float saver_s = id(backlight_off_timeout).state;
@@ -781,10 +803,12 @@ script:
           lv_obj_update_layout(id(clock_screensaver));
           lv_obj_update_layout(id(clock_label));
           lv_obj_update_layout(id(date_label));
+															
           int cx = lv_obj_get_width(id(clock_screensaver)) / 2;
           int cy = lv_obj_get_height(id(clock_screensaver)) / 2;
           int ox = (minute * 7) % 25 - 12;
           int oy = (minute * 13) % 17 - 8;
+																		
           lv_obj_invalidate(id(clock_screensaver));
           lv_obj_invalidate(id(clock_label));
           lv_obj_invalidate(id(date_label));
@@ -829,16 +853,3 @@ script:
                 id(apply_day_night_backlight).execute();
               }));
           ESP_LOGI("backlight", "Subscribed to day/night sensor '%s'", entity.c_str());
-
-
-# -----------------------------------------------------------------------------
-# CLOCK UPDATE INTERVAL
-# -----------------------------------------------------------------------------
-interval:
-  - interval: 60s
-    then:
-      - script.execute: screen_schedule_check
-
-  - interval: 30s
-    then:
-      - script.execute: refresh_clock_label
