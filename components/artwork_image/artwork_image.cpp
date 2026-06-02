@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include "esphome/core/application.h"
 #include "esphome/core/log.h"
 #include "esphome/core/version.h"
 
@@ -20,6 +21,7 @@ static const char *const CONTENT_TYPE_HEADER_NAME = "content-type";
 static constexpr uint32_t RETIRED_BUFFER_GRACE_MS = 1000;
 static constexpr size_t MAX_RETIRED_BUFFERS = 2;
 static constexpr size_t MAX_DOWNLOAD_BUFFER_SIZE = 2 * 1024 * 1024;
+static constexpr int LOCAL_ARTWORK_HTTP_TIMEOUT_MS = 4500;
 
 #include "image_decoder.h"
 
@@ -39,9 +41,9 @@ namespace artwork_image {
 using image::ImageType;
 
 #ifdef USE_ESP_IDF
-class InsecureLocalHttpContainer : public http_request::HttpContainer {
+class LocalHttpContainer : public http_request::HttpContainer {
  public:
-  explicit InsecureLocalHttpContainer(esp_http_client_handle_t client) : client_(client) {}
+  explicit LocalHttpContainer(esp_http_client_handle_t client) : client_(client) {}
 
   void add_response_header(const std::string &name, const std::string &value) {
     this->response_headers_.push_back({name, value});
@@ -75,7 +77,7 @@ class InsecureLocalHttpContainer : public http_request::HttpContainer {
 };
 
 static esp_err_t insecure_local_http_event_handler(esp_http_client_event_t *evt) {
-  auto *container = static_cast<InsecureLocalHttpContainer *>(evt->user_data);
+  auto *container = static_cast<LocalHttpContainer *>(evt->user_data);
   if (container == nullptr || evt->event_id != HTTP_EVENT_ON_HEADER) {
     return ESP_OK;
   }
@@ -125,22 +127,12 @@ void ArtworkImage::draw(int x, int y, display::Display *display, Color color_on,
 void ArtworkImage::release() {
   this->update_pending_ = false;
   this->pending_url_.clear();
-  this->discard_decode_buffer_();
-  if (this->buffer_) {
-    ESP_LOGV(TAG, "Deallocating old buffer");
-    this->allocator_.deallocate(this->buffer_, this->get_buffer_size_());
-    this->data_start_ = nullptr;
-    this->buffer_ = nullptr;
-    this->width_ = 0;
-    this->height_ = 0;
-    this->buffer_width_ = 0;
-    this->buffer_height_ = 0;
-#ifdef USE_LVGL
-    memset(&this->dsc_, 0, sizeof(this->dsc_));
-#endif
-  }
   this->end_connection_();
-  this->cleanup_retired_buffers_(true);
+  this->retire_active_buffer_();
+  this->cleanup_retired_buffers_(false);
+  if (!this->retired_buffers_.empty()) {
+    this->enable_loop();
+  }
 }
 
 size_t ArtworkImage::resize_(int width_in, int height_in) {
@@ -242,8 +234,8 @@ void ArtworkImage::update() {
     headers.push_back(http_request::Header{header.first, header.second.value()});
   }
 
-  if (this->should_use_insecure_local_url_(this->url_)) {
-    this->downloader_ = this->get_insecure_(this->url_, headers, {CONTENT_TYPE_HEADER_NAME});
+  if (this->should_use_local_idf_url_(this->url_)) {
+    this->downloader_ = this->get_local_idf_(this->url_, headers);
   } else {
     this->downloader_ = this->parent_->get(this->url_, headers, {CONTENT_TYPE_HEADER_NAME});
   }
@@ -275,7 +267,7 @@ void ArtworkImage::update() {
   }
 
   ESP_LOGD(TAG, "Starting download");
-  size_t total_size = this->downloader_->content_length;
+  size_t total_size = this->get_sane_content_length_();
 
   if (this->format_ == ImageFormat::AUTO) {
     ESP_LOGD(TAG, "Deferring auto image format detection until magic bytes are available");
@@ -300,12 +292,14 @@ void ArtworkImage::update() {
   this->enable_loop();
 }
 
-bool ArtworkImage::should_use_insecure_local_url_(const std::string &url) const {
-  if (!this->allow_insecure_local_urls_ || url.rfind("https://", 0) != 0) {
+bool ArtworkImage::should_use_local_idf_url_(const std::string &url) const {
+  bool is_http = url.rfind("http://", 0) == 0;
+  bool is_https = url.rfind("https://", 0) == 0;
+  if (!is_http && !(is_https && this->allow_insecure_local_urls_)) {
     return false;
   }
 
-  size_t host_start = 8;
+  size_t host_start = is_https ? 8 : 7;
   size_t host_end = url.find_first_of("/?#", host_start);
   std::string authority = url.substr(host_start, host_end == std::string::npos ? std::string::npos : host_end - host_start);
   size_t at = authority.rfind('@');
@@ -356,15 +350,19 @@ bool ArtworkImage::is_private_or_local_host_(const std::string &host) const {
          (parts[0] == 172 && parts[1] >= 16 && parts[1] <= 31) || (parts[0] == 169 && parts[1] == 254);
 }
 
-std::shared_ptr<http_request::HttpContainer> ArtworkImage::get_insecure_(
-    const std::string &url, const std::vector<http_request::Header> &headers,
-    const std::vector<std::string> &collect_headers) {
+std::shared_ptr<http_request::HttpContainer> ArtworkImage::get_local_idf_(
+    const std::string &url, const std::vector<http_request::Header> &headers) {
 #ifdef USE_ESP_IDF
-  ESP_LOGW(TAG, "Using insecure TLS for local artwork URL: %s", url.c_str());
+  bool secure = url.rfind("https://", 0) == 0;
+  if (secure) {
+    ESP_LOGW(TAG, "Using insecure TLS for local artwork URL: %s", url.c_str());
+  } else {
+    ESP_LOGD(TAG, "Using guarded local artwork request: %s", url.c_str());
+  }
   esp_http_client_config_t config = {};
   config.url = url.c_str();
   config.method = HTTP_METHOD_GET;
-  config.timeout_ms = this->parent_->get_timeout();
+  config.timeout_ms = std::min<int>(this->parent_->get_timeout(), LOCAL_ARTWORK_HTTP_TIMEOUT_MS);
   config.disable_auto_redirect = false;
   config.max_redirection_count = 3;
   config.auth_type = HTTP_AUTH_TYPE_BASIC;
@@ -372,14 +370,13 @@ std::shared_ptr<http_request::HttpContainer> ArtworkImage::get_insecure_(
 
   esp_http_client_handle_t client = esp_http_client_init(&config);
   if (client == nullptr) {
-    ESP_LOGE(TAG, "Insecure local artwork request failed; client could not be initialized");
+    ESP_LOGE(TAG, "Local artwork request failed; client could not be initialized");
     return nullptr;
   }
 
-  auto container = std::make_shared<InsecureLocalHttpContainer>(client);
+  auto container = std::make_shared<LocalHttpContainer>(client);
   container->set_parent(this->parent_);
-  container->set_secure(true);
-  config.user_data = static_cast<void *>(container.get());
+  container->set_secure(secure);
   esp_http_client_set_user_data(client, static_cast<void *>(container.get()));
 
   for (const auto &header : headers) {
@@ -387,29 +384,45 @@ std::shared_ptr<http_request::HttpContainer> ArtworkImage::get_insecure_(
   }
 
   const uint32_t start = millis();
+  App.feed_wdt();
   esp_err_t err = esp_http_client_open(client, 0);
+  App.feed_wdt();
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "Insecure local artwork request failed: %s", esp_err_to_name(err));
+    ESP_LOGE(TAG, "Local artwork request failed: %s", esp_err_to_name(err));
     container->end();
     return nullptr;
   }
 
   int content_length = esp_http_client_fetch_headers(client);
+  App.feed_wdt();
   container->content_length = content_length > 0 ? static_cast<size_t>(content_length) : 0;
   container->set_chunked(esp_http_client_is_chunked_response(client));
   container->status_code = esp_http_client_get_status_code(client);
   container->duration_ms = millis() - start;
   return container;
 #else
-  ESP_LOGW(TAG, "Insecure local artwork is only supported on ESP-IDF; using normal HTTP client");
-  return this->parent_->get(url, headers, collect_headers);
+  return this->parent_->get(url, headers, {CONTENT_TYPE_HEADER_NAME});
 #endif
+}
+
+size_t ArtworkImage::get_sane_content_length_() const {
+  if (!this->downloader_) {
+    return 0;
+  }
+  size_t content_length = this->downloader_->content_length;
+  if (content_length > MAX_DOWNLOAD_BUFFER_SIZE) {
+    ESP_LOGW(TAG, "Ignoring invalid artwork content length: %zu", content_length);
+    return 0;
+  }
+  return content_length;
 }
 
 void ArtworkImage::loop() {
   this->cleanup_retired_buffers_(false);
   if (!this->decoder_ && !this->downloader_) {
-    this->disable_loop();
+    if (this->retired_buffers_.empty()) {
+      this->disable_loop();
+    }
     return;
   }
 
@@ -458,7 +471,7 @@ void ArtworkImage::loop() {
       return;
     }
 
-    size_t total_size = this->downloader_->content_length;
+    size_t total_size = this->get_sane_content_length_();
     if (total_size == 0 && transfer_complete) {
       total_size = this->downloader_->get_bytes_read();
     }
@@ -821,6 +834,9 @@ void ArtworkImage::retire_active_buffer_() {
   this->buffer_height_ = 0;
   this->width_ = 0;
   this->height_ = 0;
+#ifdef USE_LVGL
+  memset(&this->dsc_, 0, sizeof(this->dsc_));
+#endif
   this->cleanup_retired_buffers_(false);
 }
 
@@ -885,6 +901,7 @@ void ArtworkImage::finish_download_() {
   ESP_LOGD(TAG, "Image fully downloaded, read %zu bytes, width/height = %d/%d",
            this->downloader_ ? this->downloader_->get_bytes_read() : 0, this->width_, this->height_);
   ESP_LOGD(TAG, "Total time: %" PRIu32 "s", (uint32_t) (::time(nullptr) - this->start_time_));
+  App.feed_wdt();
 #ifdef USE_LVGL
 #if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 4, 0)
   this->get_lv_image_dsc();
@@ -893,9 +910,11 @@ void ArtworkImage::finish_download_() {
 #endif
 #endif
   this->log_state_("lvgl-descriptor-ready");
-  this->download_finished_callback_.call(false);
-  this->log_state_("download-callback-finished");
+  App.feed_wdt();
   this->end_connection_();
+  this->download_finished_callback_.call(false);
+  App.feed_wdt();
+  this->log_state_("download-callback-finished");
   this->start_pending_update_();
 }
 
