@@ -13,6 +13,7 @@ substitutions:
   backlight_min_visible_level: "0.0f"
   screen_schedule_internal: "true"
   ha_config_internal: "false"
+  playback_refresh_interval: "1s"
 
 globals:
   - id: web_settings_active
