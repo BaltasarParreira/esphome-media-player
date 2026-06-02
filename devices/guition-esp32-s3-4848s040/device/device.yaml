@@ -27,11 +27,6 @@ esp32:
   watchdog_timeout: 15s
   framework:
     type: esp-idf
-    sdkconfig_options:
-      # Restart the RGB LCD scanout at vertical blanking instead of mid-frame.
-      # Without this, an LVGL flush that overlaps the LCD scanout produces
-      # brief visible marks during full-screen updates like new album art.
-      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
 
 
 # -----------------------------------------------------------------------------
