@@ -27,9 +27,6 @@ esp32:
   watchdog_timeout: 15s
   framework:
     type: esp-idf
-    sdkconfig_options:
-      # Keep the LCD interrupt path available during brief flash/cache stalls.
-      CONFIG_LCD_RGB_ISR_IRAM_SAFE: "y"
 
 
 # -----------------------------------------------------------------------------
