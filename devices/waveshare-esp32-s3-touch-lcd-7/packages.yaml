@@ -25,7 +25,7 @@ substitutions:
   idle_action_default: "Clock"
   screen_schedule_internal: "true"
   ha_config_internal: "true"
-  layback_refresh_interval: "1s"
+  playback_refresh_interval: "1s"
 
   # Setup screens
   setup_content_width: "560"
