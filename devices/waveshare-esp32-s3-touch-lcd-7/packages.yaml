@@ -20,7 +20,6 @@ substitutions:
   artwork_contrast_boost: "0.04f"
   artwork_saturation_boost: "0.10f"
   artwork_allow_zoom: "false"
-  playback_refresh_interval: "1s"
   playback_live_time_enabled: "true"
   playback_live_position_enabled: "true"
   track_info_duration_default: "0"
