@@ -25,6 +25,7 @@ substitutions:
   idle_action_default: "Clock"
   screen_schedule_internal: "true"
   ha_config_internal: "true"
+  release_artwork_before_download: "false"
   playback_refresh_interval: "1s"
 
   # Setup screens
