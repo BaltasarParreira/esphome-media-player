@@ -741,6 +741,5 @@ display:
   - platform: mipi_dsi
     model: WAVESHARE-P4-86-PANEL
     id: my_display
-    reset_pin: GPIO27
-    color_order: RGB
+    update_interval: never
     auto_clear_enabled: false
