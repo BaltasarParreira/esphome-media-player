@@ -10,8 +10,14 @@ lvgl:
   buffer_size: 14%
 #  byte_order: little_endian
   rotation: ${display_rotation}
-  displays:
-    - tft_display
+  on_boot:
+    - lambda: |-
+        lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_MOMENTUM);
+        lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_ELASTIC);
+        lv_obj_set_scroll_dir(id(speakers_container), LV_DIR_VER);
+    - lambda: 'id(lvgl_ready) = true;'
+    - script.execute: apply_screen_rotation
+
   pages:
     - id: main_page
       scrollbar_mode: "off"
