@@ -11,8 +11,10 @@ lvgl:
 #  byte_order: little_endian
   rotation: ${display_rotation}
 
-  pages:
-    - id: main_page
+#  pages:
+  displays:
+    - display_id: main_page
+#    - id: main_page
       scrollbar_mode: "off"
       scrollable: false
       width: 100%
