@@ -11,13 +11,10 @@ lvgl:
 #  byte_order: little_endian
   rotation: ${display_rotation}
 
-#  pages:
   displays:
     - tft_display
-#    - id: main_page
-  top_level_widgets:
-    - obj:
-      id: main_page
+  pages:
+    - id: main_page
       scrollbar_mode: "off"
       scrollable: false
       width: 100%
