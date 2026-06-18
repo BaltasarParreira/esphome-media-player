@@ -731,7 +731,7 @@ display:
     update_interval: never
     auto_clear_enabled: false
     color_order: RGB
-    show_test_card: true
+    show_test_card: false
     pclk_frequency: 16MHZ
     dimensions:
       width: 800
