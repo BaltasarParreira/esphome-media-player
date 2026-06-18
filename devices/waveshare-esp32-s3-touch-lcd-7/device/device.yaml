@@ -47,24 +47,15 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   on_boot:
-    - priority: -10
-      then:
-        - delay: 2s
-        - script.execute: apply_timezone
-        - light.turn_on:
-            id: backlight
-            brightness: 100%
-            transition_length: 500ms
-        - script.execute: backlight_wake_timeout
-    - priority: -100  # Ensures LVGL and components are fully initialized first
-      then:
-        - lambda: |-
-            lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_MOMENTUM);
-            lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_ELASTIC);
-            lv_obj_set_scroll_dir(id(speakers_container), LV_DIR_VER);
-        - lambda: |-
-            id(lvgl_ready) = true;
-        - script.execute: apply_screen_rotation
+    priority: -10
+    then:
+      - delay: 2s
+      - script.execute: apply_timezone
+      - light.turn_on:
+          id: backlight
+          brightness: 100%
+          transition_length: 500ms
+      - script.execute: backlight_wake_timeout
   platformio_options:
     board_build.arduino.memory_type: qio_opi   # --> Bal
     board_upload.maximum_ram_size: 524288   # --> Bal
@@ -737,7 +728,6 @@ display:
   - platform: mipi_rgb
     model: ESP32-S3-TOUCH-LCD-7-800X480
     id: tft_display
-    pages: !remove              # Forces legacy pages out of the driver config
     update_interval: never
     auto_clear_enabled: false
     color_order: RGB
