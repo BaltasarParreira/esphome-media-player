@@ -13,8 +13,11 @@ lvgl:
 
 #  pages:
   displays:
-    - display_id: main_page
+    - tft_display
 #    - id: main_page
+  top_level_widgets:
+    - obj:
+      id: main_page
       scrollbar_mode: "off"
       scrollable: false
       width: 100%
