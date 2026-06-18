@@ -56,15 +56,15 @@ esphome:
           brightness: 100%
           transition_length: 500ms
       - script.execute: backlight_wake_timeout
-    - priority: -100  # Ensures LVGL and components are fully initialized first
-      then:
-        - lambda: |-
-            lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_MOMENTUM);
-            lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_ELASTIC);
-            lv_obj_set_scroll_dir(id(speakers_container), LV_DIR_VER);
-        - lambda: |-
-            id(lvgl_ready) = true;
-        - script.execute: apply_screen_rotation
+    priority: -100  # Ensures LVGL and components are fully initialized first
+    then:
+      - lambda: |-
+          lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_MOMENTUM);
+          lv_obj_clear_flag(id(speakers_container), LV_OBJ_FLAG_SCROLL_ELASTIC);
+          lv_obj_set_scroll_dir(id(speakers_container), LV_DIR_VER);
+      - lambda: |-
+          id(lvgl_ready) = true;
+      - script.execute: apply_screen_rotation
   platformio_options:
     board_build.arduino.memory_type: qio_opi   # --> Bal
     board_upload.maximum_ram_size: 524288   # --> Bal
