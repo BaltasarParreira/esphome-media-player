@@ -10,7 +10,6 @@ lvgl:
   buffer_size: 14%
 #  byte_order: little_endian
   rotation: ${display_rotation}
-
   displays:
     - tft_display
   pages:
