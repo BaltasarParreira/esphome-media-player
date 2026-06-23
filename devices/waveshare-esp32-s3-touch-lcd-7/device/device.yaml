@@ -187,6 +187,7 @@ output:
   - platform: ledc
     id: backlight_output
     pin: 16 # pin: GPIO23 --> Balta
+    frequency: 20kHz
   - platform: gpio
     id: backlight_output_ws
     pin:
@@ -743,7 +744,7 @@ display:
     auto_clear_enabled: false
     color_order: RGB
     show_test_card: false
-    pclk_frequency: 16MHZ
+    pclk_frequency: 12MHz # 16MHZ
     dimensions:
       width: 800
       height: 480
