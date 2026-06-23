@@ -69,6 +69,7 @@ esphome:
         - script.execute: apply_screen_rotation
   platformio_options:
     board_build.arduino.memory_type: qio_opi   # --> Bal
+    board_build.f_flash: 80000000L   # --> Bal
     board_upload.maximum_ram_size: 524288   # --> Bal
     board_build.flash_mode: dio
     build_flags:
