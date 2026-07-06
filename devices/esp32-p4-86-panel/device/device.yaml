@@ -143,36 +143,6 @@ api:
         then:
           - lvgl.widget.show: ha_setup_prompt
 
-
-# -----------------------------------------------------------------------------
-# SCREEN ROTATION SELECT
-# -----------------------------------------------------------------------------
-# Exposes native LVGL display rotation to Home Assistant and the web settings UI.
-# LVGL handles the screen transform and touch input rotation together.
-# -----------------------------------------------------------------------------
-select:
-  - platform: template
-    name: "Screen Rotation"
-    id: screen_rotation_select
-    icon: "mdi:screen-rotation"
-    entity_category: config
-    internal: ${ha_config_internal}
-    optimistic: true
-    restore_value: true
-    initial_option: "${display_rotation}"
-    options:
-      - "0"
-      - "90"
-      - "180"
-      - "270"
-    on_value:
-      - if:
-          condition:
-            lambda: 'return id(lvgl_ready);'
-          then:
-            - script.execute: apply_screen_rotation
-
-
 # -----------------------------------------------------------------------------
 # LOGGING
 # -----------------------------------------------------------------------------

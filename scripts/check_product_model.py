@@ -124,6 +124,20 @@ def check_devices() -> None:
     if '<SupportedDevices mode="release" />' not in release_docs:
         fail("release-versioning-improvements.md must render release devices from product/devices.json")
 
+    base_yaml = read(ROOT / "common" / "device" / "base.yaml")
+    rotation_yaml = read(ROOT / "common" / "addon" / "screen_rotation.yaml")
+    if "screen_rotation: !include ../addon/screen_rotation.yaml" not in base_yaml:
+        fail("common/device/base.yaml must include the shared screen rotation addon")
+    if 'name: "Screen Rotation"' not in rotation_yaml:
+        fail("common/addon/screen_rotation.yaml must define the Screen Rotation select")
+    duplicated_rotation_files = [
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "devices").glob("*/device/device.yaml")
+        if 'name: "Screen Rotation"' in read(path)
+    ]
+    if duplicated_rotation_files:
+        fail(f"Screen Rotation select must stay shared; remove duplicated device definitions in {duplicated_rotation_files}")
+
     release_yml = read(ROOT / ".github" / "workflows" / "release.yml")
     if "python3 scripts/product_model.py release-matrix" not in release_yml:
         fail("release.yml must build its device matrix from product/devices.json")
