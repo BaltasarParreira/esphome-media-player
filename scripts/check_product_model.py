@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -168,6 +169,16 @@ def check_devices() -> None:
                 fail(f"{device.asset_slug} purchase accessory {index} is missing source")
             if not str(accessory.get("url", "")).strip():
                 fail(f"{device.asset_slug} purchase accessory {index} is missing url")
+
+        assets = device.assets
+        if not isinstance(assets, dict):
+            fail(f"{device.asset_slug} assets must be an object in product/devices.json")
+        icons_path = assets.get("icons")
+        if not isinstance(icons_path, str) or not icons_path.strip():
+            fail(f"{device.asset_slug} is missing assets.icons in product/devices.json")
+        if not (ROOT / icons_path).is_file():
+            fail(f"{device.asset_slug} assets.icons is missing: {icons_path}")
+
         docs_text = read(docs_path)
         purchase_component = f'<PurchaseLinks device="{device.web_slug}" />'
         if purchase_component not in docs_text:
@@ -310,21 +321,21 @@ def check_devices() -> None:
             f"{[str(path.relative_to(ROOT)) for path in duplicated_placeholders]}"
         )
 
-    medium_icons = read(ROOT / "common" / "assets" / "icons-medium.yaml")
-    for required_token in ("id: icon_font", "id: icon_font_small", "id: icon_font_large", "size: 62"):
-        if required_token not in medium_icons:
-            fail(f"common/assets/icons-medium.yaml must keep shared medium icon token {required_token!r}")
-    medium_icon_devices = (
-        "guition-esp32-p4-jc1060p470",
-        "guition-esp32-p4-jc4880p443",
-    )
-    for device_config in medium_icon_devices:
-        package_text = read(ROOT / "devices" / device_config / "packages.yaml")
-        if "icons: !include ../../common/assets/icons-medium.yaml" not in package_text:
-            fail(f"{device_config} must include the shared medium icon asset file")
-        local_icons = ROOT / "devices" / device_config / "assets" / "icons.yaml"
-        if local_icons.exists():
-            fail(f"{local_icons.relative_to(ROOT)} duplicates common/assets/icons-medium.yaml")
+    common_medium_icons_path = "common/assets/icons-medium.yaml"
+    if any(device.assets["icons"] == common_medium_icons_path for device in devices):
+        medium_icons = read(ROOT / common_medium_icons_path)
+        for required_token in ("id: icon_font", "id: icon_font_small", "id: icon_font_large", "size: 62"):
+            if required_token not in medium_icons:
+                fail(f"{common_medium_icons_path} must keep shared medium icon token {required_token!r}")
+    for device in devices:
+        icons_path = device.assets["icons"]
+        package_text = read(ROOT / "devices" / device.config / "packages.yaml")
+        include_path = Path(os.path.relpath(ROOT / icons_path, ROOT / "devices" / device.config)).as_posix()
+        if f"icons: !include {include_path}" not in package_text:
+            fail(f"{device.config} must include the catalog icon asset file {icons_path}")
+        local_icons = ROOT / "devices" / device.config / "assets" / "icons.yaml"
+        if icons_path == common_medium_icons_path and local_icons.exists():
+            fail(f"{local_icons.relative_to(ROOT)} duplicates {common_medium_icons_path}")
 
     release_yml = read(ROOT / ".github" / "workflows" / "release.yml")
     if "python3 scripts/product_model.py release-matrix" not in release_yml:

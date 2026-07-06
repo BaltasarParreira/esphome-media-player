@@ -33,6 +33,7 @@ class Device:
     docs: dict[str, Any]
     purchase: dict[str, Any]
     display: dict[str, Any]
+    assets: dict[str, Any]
     installer: dict[str, Any]
     dev: dict[str, Any]
     alternate_package_paths: list[str] | None = None
