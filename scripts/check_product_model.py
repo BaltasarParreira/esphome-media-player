@@ -239,6 +239,22 @@ def check_devices() -> None:
             f"{[str(path.relative_to(ROOT)) for path in duplicated_placeholders]}"
         )
 
+    medium_icons = read(ROOT / "common" / "assets" / "icons-medium.yaml")
+    for required_token in ("id: icon_font", "id: icon_font_small", "id: icon_font_large", "size: 62"):
+        if required_token not in medium_icons:
+            fail(f"common/assets/icons-medium.yaml must keep shared medium icon token {required_token!r}")
+    medium_icon_devices = (
+        "guition-esp32-p4-jc1060p470",
+        "guition-esp32-p4-jc4880p443",
+    )
+    for device_config in medium_icon_devices:
+        package_text = read(ROOT / "devices" / device_config / "packages.yaml")
+        if "icons: !include ../../common/assets/icons-medium.yaml" not in package_text:
+            fail(f"{device_config} must include the shared medium icon asset file")
+        local_icons = ROOT / "devices" / device_config / "assets" / "icons.yaml"
+        if local_icons.exists():
+            fail(f"{local_icons.relative_to(ROOT)} duplicates common/assets/icons-medium.yaml")
+
     release_yml = read(ROOT / ".github" / "workflows" / "release.yml")
     if "python3 scripts/product_model.py release-matrix" not in release_yml:
         fail("release.yml must build its device matrix from product/devices.json")
