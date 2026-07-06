@@ -194,6 +194,20 @@ def check_devices() -> None:
     if duplicated_ui_state_files:
         fail(f"Dashboard UI state globals must stay shared; remove duplicated device definitions in {duplicated_ui_state_files}")
 
+    setup_wrapper_files = sorted((ROOT / "devices").glob("*/setup/*.yaml"))
+    if setup_wrapper_files:
+        fail(
+            "Setup screens must be included from common/setup directly; remove per-device setup wrappers in "
+            f"{[str(path.relative_to(ROOT)) for path in setup_wrapper_files]}"
+        )
+    device_setup_includes = [
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "devices").glob("*/device/lvgl.yaml")
+        if re.search(r"!include\s+\.\./setup/", read(path))
+    ]
+    if device_setup_includes:
+        fail(f"Device LVGL files must include shared setup screens directly from common/setup: {device_setup_includes}")
+
     release_yml = read(ROOT / ".github" / "workflows" / "release.yml")
     if "python3 scripts/product_model.py release-matrix" not in release_yml:
         fail("release.yml must build its device matrix from product/devices.json")
