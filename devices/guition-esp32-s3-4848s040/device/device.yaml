@@ -21,12 +21,16 @@
 esp32:
   board: esp32-s3-devkitc-1
   flash_size: 16MB
-  # ESPHome 2026.5 tightened the ESP32 idle/watchdog timing. This display can
-  # briefly block while LVGL and artwork buffers are busy, so keep watchdog
-  # protection enabled but allow the same 15s window ESPHome uses for OTA.
+  # ESPHome's ESP32 idle/watchdog timing can be tight while this display briefly
+  # blocks on LVGL and artwork buffers, so keep watchdog protection enabled but
+  # allow the same 15s window ESPHome uses for OTA.
   watchdog_timeout: 15s
   framework:
     type: esp-idf
+    sdkconfig_options:
+      # The S3 RGB panel scans from PSRAM while LVGL and artwork decoding also
+      # use PSRAM. Recover the LCD DMA at VSYNC if that stream stalls.
+      CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
 
 
 # -----------------------------------------------------------------------------
@@ -42,80 +46,6 @@ esp32:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-
-
-# -----------------------------------------------------------------------------
-# OVER THE AIR (OTA) UPDATES
-# -----------------------------------------------------------------------------
-# Allows updating the firmware wirelessly without plugging in USB.
-# Once configured, you can flash new code from ESPHome dashboard.
-# -----------------------------------------------------------------------------
-ota:
-  - platform: esphome
-    on_begin:
-      - lambda: 'global_preferences->sync();'
-      - lvgl.pause
-      - light.turn_off:
-          id: backlight
-          transition_length: 0s
-    on_error:
-      - light.turn_on:
-          id: backlight
-          brightness: 100%
-          transition_length: 0s
-      - lvgl.resume
-
-
-# -----------------------------------------------------------------------------
-# HOME ASSISTANT API
-# -----------------------------------------------------------------------------
-# Enables communication between this device and Home Assistant.
-# Without this, the device won't appear in Home Assistant.
-# The encryption key is typically set in your secrets.yaml file.
-# -----------------------------------------------------------------------------
-api:
-  on_client_connected:
-    - lambda: |-
-        if (client_info.find("Home Assistant") != std::string::npos) {
-          std::string protocol = "${ha_protocol}";
-          std::string host = "${ha_host}";
-          // Use the HA API client IP for http (avoids mDNS lookup for artwork),
-          // but keep the configured hostname for https (raw IPs won't match SSL certs).
-          if (protocol == "http" && host == "homeassistant.local") {
-            id(ha_base_url) = "http://" + client_address + ":${ha_port}";
-          } else {
-            id(ha_base_url) = "${ha_protocol}://${ha_host}:${ha_port}";
-          }
-        }
-    - lvgl.widget.hide: ha_setup_prompt
-    - script.execute: apply_timezone
-    - lambda: |-
-        std::string old_val = id(tv_media_player_entity).state;
-        if (!old_val.empty() && id(linked_media_player_entity).state.empty()) {
-          ESP_LOGI("media_select", "Migrating TV entity '%s' to linked media player", old_val.c_str());
-          auto call = id(linked_media_player_entity).make_call();
-          call.set_value(old_val);
-          call.perform();
-        }
-        if (!old_val.empty()) {
-          auto call = id(tv_media_player_entity).make_call();
-          call.set_value("");
-          call.perform();
-        }
-    - script.execute: subscribe_media_player
-    - script.execute: subscribe_linked_media_player
-    - script.execute: subscribe_day_night_sensor
-  on_client_disconnected:
-    - lvgl.widget.hide: setup_prompt
-    - if:
-        condition:
-          lambda: |-
-            return !id(device_has_been_setup)
-                && !id(boot_grace_period)
-                && (esphome::api::global_api_server == nullptr
-                    || !esphome::api::global_api_server->is_connected());
-        then:
-          - lvgl.widget.show: ha_setup_prompt
 
 
 # -----------------------------------------------------------------------------
@@ -189,75 +119,6 @@ i2c:
 
 
 # -----------------------------------------------------------------------------
-# GLOBAL STATE VARIABLES
-# -----------------------------------------------------------------------------
-# Shared state used across touch handling, gesture detection, UI visibility,
-# and the settings panel. These persist for the lifetime of the device and are
-# accessed from touchscreen handlers, scripts, and lambdas.
-# -----------------------------------------------------------------------------
-globals:
-  # -- Touch tracking (swipe gesture detection) --
-  - id: touch_x_start            # X coordinate when finger first touches
-    type: int
-    initial_value: '0'
-  - id: touch_y_start            # Y coordinate when finger first touches
-    type: int
-    initial_value: '0'
-  - id: touch_x_end              # X coordinate updated as finger moves
-    type: int
-    initial_value: '0'
-  - id: touch_y_end              # Y coordinate updated as finger moves
-    type: int
-    initial_value: '0'
-  - id: touch_start_time          # millis() when finger first touches (for long-press)
-    type: uint32_t
-    initial_value: '0'
-
-  # -- UI overlay visibility --
-  - id: is_ui_hidden             # True when title/artist/play button are hidden
-    type: bool
-    initial_value: 'false'
-  - id: is_screen_dimmed         # True when backlight is in dimmed/idle state
-    type: bool
-    initial_value: 'false'
-  - id: was_screen_dimmed        # Snapshot at touch-start; prevents toggle on wake
-    type: bool
-    initial_value: 'false'
-  - id: is_clock_showing         # True when clock screensaver overlay is visible
-    type: bool
-    initial_value: 'false'
-
-  # -- Settings panel state --
-  - id: is_panel_open            # True when the swipe-down settings panel is visible
-    type: bool
-    initial_value: 'false'
-  - id: was_panel_open           # Snapshot at touch-start; blocks bleed-through taps
-    type: bool
-    initial_value: 'false'
-
-  # -- TV source mode --
-  - id: is_tv_mode
-    type: bool
-    initial_value: 'false'
-  - id: is_tv_idle
-    type: bool
-    initial_value: 'false'
-
-  # -- Setup flow --
-  - id: actions_prompt_acked
-    type: bool
-    restore_value: true
-    initial_value: 'false'
-  # True after first successful setup (WiFi + HA + media entity); suppresses
-  # WiFi/HA/actions setup prompts on restart so user sees loading/main UI instead.
-  - id: device_has_been_setup
-    type: bool
-    restore_value: true
-    initial_value: 'false'
-
-
-
-# -----------------------------------------------------------------------------
 # TOUCHSCREEN (GT911 Controller)
 # -----------------------------------------------------------------------------
 # The GT911 is the touch controller chip on this display.
@@ -311,8 +172,8 @@ touchscreen:
           int view_dx = view_x_end - view_x_start;
           int view_dy = view_y_end - view_y_start;
 
-          ESP_LOGD("touch", "Swipe raw=(%d,%d) view=(%d,%d) rotation=${display_rotation} start=(%d,%d) end=(%d,%d)",
-                   dx, dy, view_dx, view_dy, id(touch_x_start), id(touch_y_start),
+          ESP_LOGD("touch", "Swipe raw=(%d,%d) view=(%d,%d) rotation=%s start=(%d,%d) end=(%d,%d)",
+                   dx, dy, view_dx, view_dy, id(screen_rotation_select).current_option().c_str(), id(touch_x_start), id(touch_y_start),
                    id(touch_x_end), id(touch_y_end));
 
           // --- Dismiss actions prompt on tap ---
@@ -422,6 +283,31 @@ touchscreen:
 # mode: restart – cancels the in-progress run and starts fresh
 # -----------------------------------------------------------------------------
 script:
+  # -- Apply Home Assistant/web settings screen rotation using native LVGL rotation --
+  - id: apply_screen_rotation
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "0";'
+          then:
+            - lvgl.display.set_rotation: 0
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "90";'
+          then:
+            - lvgl.display.set_rotation: 90
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "180";'
+          then:
+            - lvgl.display.set_rotation: 180
+      - if:
+          condition:
+            lambda: 'return id(screen_rotation_select).current_option() == "270";'
+          then:
+            - lvgl.display.set_rotation: 270
+
   # -- Toggle now-playing overlay (fade in / fade out) --
   - id: toggle_ui
     mode: restart
@@ -746,9 +632,9 @@ display:
     model: GUITION-4848S040
     id: my_display
     color_order: RGB
-    # 16 MHz puts the panel refresh near 60 Hz with these timings, which avoids
-    # the subtle low-refresh shimmer visible at 6-12 MHz on some panels.
-    pclk_frequency: 16MHz
+    # 6 MHz gives the S3 RGB DMA more headroom during album-art and LVGL redraws.
+    # Higher scan rates can show transient shifted bands or stray pixels.
+    pclk_frequency: 6MHz
     update_interval: never
     auto_clear_enabled: False
     transform:
