@@ -632,9 +632,9 @@ display:
     model: GUITION-4848S040
     id: my_display
     color_order: RGB
-    # 12 MHz is the Guition model default and leaves more DMA margin during
-    # touch-triggered LVGL redraws on ESPHome 2026.6.
-    pclk_frequency: 12MHz
+    # 6 MHz gives the S3 RGB DMA more headroom during album-art and LVGL redraws.
+    # Higher scan rates can show transient shifted bands or stray pixels.
+    pclk_frequency: 6MHz
     update_interval: never
     auto_clear_enabled: False
     transform:
