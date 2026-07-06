@@ -8,6 +8,10 @@
       "chip": "ESP32-P4",
       "package_path": "devices/guition-esp32-p4-jc8012p4a1/packages.yaml",
       "docs_path": "/devices/esp32-p4-jc8012p4a1",
+      "docs": {
+        "order": 5,
+        "sidebar": "ESP32-P4 JC8012P4A1 (10.1\")"
+      },
       "display": {
         "name": "Guition ESP32-P4 JC8012P4A1",
         "label": "JC8012P4A1",
@@ -33,6 +37,10 @@
       "chip": "ESP32-P4",
       "package_path": "devices/guition-esp32-p4-jc1060p470/packages.yaml",
       "docs_path": "/devices/esp32-p4-jc1060p470",
+      "docs": {
+        "order": 4,
+        "sidebar": "ESP32-P4 JC1060P470 (7\")"
+      },
       "display": {
         "name": "Guition ESP32-P4 JC1060P470",
         "label": "JC1060P470",
@@ -58,6 +66,10 @@
       "chip": "ESP32-P4",
       "package_path": "devices/guition-esp32-p4-jc4880p443/packages-90.yaml",
       "docs_path": "/devices/esp32-p4-jc4880p443",
+      "docs": {
+        "order": 3,
+        "sidebar": "ESP32-P4 JC4880P443 (4.3\")"
+      },
       "display": {
         "name": "Guition ESP32-P4 JC4880P443",
         "label": "JC4880P443",
@@ -83,6 +95,10 @@
       "chip": "ESP32-P4",
       "package_path": "devices/esp32-p4-86-panel/packages.yaml",
       "docs_path": "/devices/esp32-p4-86-panel",
+      "docs": {
+        "order": 2,
+        "sidebar": "ESP32-P4 86 Panel (4\")"
+      },
       "display": {
         "name": "ESP32-P4 86 Panel",
         "label": "P4 86 Panel",
@@ -108,6 +124,10 @@
       "chip": "ESP32-S3",
       "package_path": "devices/guition-esp32-s3-4848s040/packages.yaml",
       "docs_path": "/devices/esp32-s3-4848s040",
+      "docs": {
+        "order": 1,
+        "sidebar": "ESP32-S3 4848S040 (4\")"
+      },
       "display": {
         "name": "Guition ESP32-S3 4848S040",
         "label": "4848S040",

@@ -48,6 +48,7 @@ def check_devices() -> None:
     assert_unique((device.asset_slug for device in devices), "asset slugs")
     assert_unique((device.web_slug for device in devices), "web slugs")
     assert_unique((device.config for device in devices), "device configs")
+    assert_unique((str(device.docs["order"]) for device in devices), "docs order values")
 
     for device in devices:
         if not device.factory_yaml.is_file():
@@ -71,6 +72,12 @@ def check_devices() -> None:
         docs_path = docs_file_for_route(device.docs_path)
         if not docs_path.is_file():
             fail(f"{device.asset_slug} docs page is missing: {docs_path.relative_to(ROOT)}")
+        if not str(device.docs.get("sidebar", "")).strip():
+            fail(f"{device.asset_slug} is missing docs.sidebar in product/devices.json")
+
+    vitepress_config = read(ROOT / "docs" / ".vitepress" / "config.js")
+    if "deviceSidebarItems" not in vitepress_config or "product/devices.json" not in vitepress_config:
+        fail("docs/.vitepress/config.js must build the device sidebar from product/devices.json")
 
     release_yml = read(ROOT / ".github" / "workflows" / "release.yml")
     if "python3 scripts/product_model.py release-matrix" not in release_yml:

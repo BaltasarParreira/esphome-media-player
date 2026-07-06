@@ -29,6 +29,7 @@ class Device:
     chip: str
     package_path: str
     docs_path: str
+    docs: dict[str, Any]
     display: dict[str, Any]
     installer: dict[str, Any]
 
