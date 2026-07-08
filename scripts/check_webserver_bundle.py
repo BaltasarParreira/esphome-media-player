@@ -113,6 +113,15 @@ def check_generated_device_metadata(text: str) -> None:
         )
 
 
+def check_device_profile_helper_wiring(text: str) -> None:
+    if "function hasDeviceProfile(group)" not in text:
+        raise WebserverBundleCheckError("generated webserver bundle is missing hasDeviceProfile(group)")
+    if "S3_DEVICE_PROFILE" in text:
+        raise WebserverBundleCheckError("generated webserver bundle references removed S3_DEVICE_PROFILE constant")
+    if 'return hasDeviceProfile("esp32_s3");' not in text:
+        raise WebserverBundleCheckError("generated webserver bundle must use WEB_DEVICE_PROFILES for S3 detection")
+
+
 def main() -> int:
     text = BUNDLE.read_text()
     leaked = [placeholder for placeholder in PLACEHOLDERS if placeholder in text]
@@ -122,6 +131,7 @@ def main() -> int:
 
     try:
         check_generated_device_metadata(text)
+        check_device_profile_helper_wiring(text)
     except WebserverBundleCheckError as exc:
         print(f"Webserver bundle check failed: {exc}", file=sys.stderr)
         return 1

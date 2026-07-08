@@ -91,7 +91,7 @@
   }
 
   function isS3Display() {
-    return S.device_profile === S3_DEVICE_PROFILE;
+    return hasDeviceProfile("esp32_s3");
   }
 
   function isDeveloperExperimentalMode() {

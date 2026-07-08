@@ -87,6 +87,32 @@ def test_wrapped_package_device_keeps_screen_tone_profile() -> None:
     assert "guition-esp32-p4-jc4880p443" in web_device_profiles()["screen_tone"]
 
 
+def test_device_profile_helper_wiring_accepts_generated_shape() -> None:
+    check_webserver_bundle.check_device_profile_helper_wiring(
+        'function hasDeviceProfile(group) {}\n'
+        'function isS3Display() { return hasDeviceProfile("esp32_s3"); }\n'
+    )
+
+
+def test_device_profile_helper_wiring_rejects_missing_helper() -> None:
+    run_fails(
+        lambda: check_webserver_bundle.check_device_profile_helper_wiring(
+            'function isS3Display() { return hasDeviceProfile("esp32_s3"); }\n'
+        ),
+        "missing hasDeviceProfile",
+    )
+
+
+def test_device_profile_helper_wiring_rejects_removed_constant() -> None:
+    run_fails(
+        lambda: check_webserver_bundle.check_device_profile_helper_wiring(
+            'function hasDeviceProfile(group) {}\n'
+            "function isS3Display() { return S.device_profile === S3_DEVICE_PROFILE; }\n"
+        ),
+        "S3_DEVICE_PROFILE",
+    )
+
+
 def test_generated_device_metadata_rejects_unknown_profile() -> None:
     wrong_profiles = dict(web_device_profiles())
     wrong_profiles["screen_rotation"] = [*wrong_profiles["screen_rotation"], "old-device"]
@@ -146,6 +172,9 @@ def main() -> int:
     test_generated_device_metadata_rejects_wrong_public_base_url()
     test_generated_device_metadata_rejects_wrong_profile_groups()
     test_wrapped_package_device_keeps_screen_tone_profile()
+    test_device_profile_helper_wiring_accepts_generated_shape()
+    test_device_profile_helper_wiring_rejects_missing_helper()
+    test_device_profile_helper_wiring_rejects_removed_constant()
     test_generated_device_metadata_rejects_unknown_profile()
     test_generated_device_metadata_rejects_profile_group_non_list()
     test_json_assignment_requires_assignment()
