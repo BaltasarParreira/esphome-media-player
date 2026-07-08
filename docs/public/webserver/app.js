@@ -30,7 +30,7 @@
   var SETTING_OPTIONS = {"track_info_duration":[0,3,5,10,15,20,30,60],"speaker_panel_timeout":[5,10,20,30,60]};
   var SPEAKER_PANEL_TIMEOUT_OPTIONS = SETTING_OPTIONS.speaker_panel_timeout;
   var TRACK_INFO_DURATION_OPTIONS = SETTING_OPTIONS.track_info_duration;
-  var WEB_DEVICE_PROFILES = {"esp32_s3":["guition-esp32-s3-4848s040"],"screen_rotation":["guition-esp32-p4-jc8012p4a1","guition-esp32-p4-jc1060p470","guition-esp32-p4-jc4880p443","esp32-p4-86-panel","guition-esp32-s3-4848s040"],"screen_tone":["guition-esp32-p4-jc8012p4a1","guition-esp32-p4-jc1060p470","esp32-p4-86-panel"],"track_info_duration":["esp32-p4-86-panel","guition-esp32-s3-4848s040"]};
+  var WEB_DEVICE_PROFILES = {"esp32_s3":["guition-esp32-s3-4848s040"],"screen_rotation":["guition-esp32-p4-jc8012p4a1","guition-esp32-p4-jc1060p470","guition-esp32-p4-jc4880p443","esp32-p4-86-panel","guition-esp32-s3-4848s040"],"screen_tone":["guition-esp32-p4-jc8012p4a1","guition-esp32-p4-jc1060p470","guition-esp32-p4-jc4880p443","esp32-p4-86-panel"],"track_info_duration":["esp32-p4-86-panel","guition-esp32-s3-4848s040"]};
   var WEB_ACTIVITY_HEARTBEAT_MS = 10000;
   var FIRMWARE_INSTALL_REFRESH_MS = 5000;
   var FIRMWARE_INSTALL_REFRESH_TIMEOUT_MS = 300000;

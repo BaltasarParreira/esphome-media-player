@@ -33,9 +33,9 @@ Progress updates:
   validation before artwork component refactors.
 - 2026-07-07: Extended the device metadata check to validate common setup
   prompt wrappers for every supported device.
-- 2026-07-07: Added `devices/supported_devices.json` as the shared supported
-  device registry for release tooling and generated web settings metadata.
-- 2026-07-07: Added default ESPHome package filenames to the device registry and
+- 2026-07-07: Added `product/devices.json` as the shared supported device
+  catalog for release tooling and generated web settings metadata.
+- 2026-07-07: Added default ESPHome package filenames to the device catalog and
   validated device docs against them.
 - 2026-07-07: Documented the Home Assistant media player subscription lifecycle
   and manual regression checklist.
@@ -465,13 +465,13 @@ Progress updates:
   slug, chip family, default package, docs path, and support status. Read that
   registry from release scripts and webserver generation. Use it to validate
   docs/device links and package slugs.
-- Status: partially fixed. `devices/supported_devices.json` now drives
+- Status: partially fixed. `product/devices.json` now drives
   `scripts/firmware_release.py` and generated web settings metadata for
   firmware manifest slugs, screen rotation support, and track-info-duration
   support. It also records clock screen saver support, Screen Tone support,
   public docs slugs, display names, install summaries, README table size/buy
   links, default ESPHome package files, and default display rotation values.
-  `scripts/check_devices.py` validates the registry-backed release workflow,
+  `scripts/check_devices.py` validates the catalog-backed release workflow,
   build YAML, package substitution, install button, README, installation page,
   docs index, manual ESPHome config, ESPHome import wrapper package path,
   display-rotation package examples, release-versioning asset table,
@@ -657,11 +657,11 @@ Progress updates:
   and UI rendering. Keep `scripts/generate_webserver.py` responsible for
   producing the single bundled `app.js` needed by ESPHome.
 - Status: partially fixed. Device metadata sections are now generated from
-  `devices/supported_devices.json`, and `scripts/check_webserver_bundle.py`
+  `product/devices.json`, and `scripts/check_webserver_bundle.py`
   verifies that generated `app.js` has no leaked template tokens and passes
   JavaScript syntax checking. It also verifies that the generated firmware
   manifest map and public firmware update URLs match the supported device
-  registry. Firmware update helper logic now lives in
+  catalog. Firmware update helper logic now lives in
   `docs/webserver/src/firmware.template.js` and is inserted by
   `scripts/generate_webserver.py`. Default settings state, entity metadata, and
   numeric limits now live in `docs/webserver/src/settings.template.js`. ESPHome

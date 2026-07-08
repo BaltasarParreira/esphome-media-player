@@ -51,6 +51,13 @@ class Device:
     def height(self) -> int:
         return int(self.display["height"])
 
+    @property
+    def package_paths(self) -> tuple[str, ...]:
+        paths = [self.package_path]
+        if self.alternate_package_paths:
+            paths.extend(self.alternate_package_paths)
+        return tuple(paths)
+
 
 def _load_json(path: Path) -> dict[str, Any]:
     try:
@@ -105,7 +112,10 @@ def web_device_profiles() -> dict[str, list[str]]:
         "screen_tone": [
             device.profile
             for device in devices
-            if "common/addon/warm_tones.yaml" in (ROOT / device.package_path).read_text()
+            if any(
+                "common/addon/warm_tones.yaml" in (ROOT / path).read_text()
+                for path in device.package_paths
+            )
         ],
         "track_info_duration": [
             device.profile

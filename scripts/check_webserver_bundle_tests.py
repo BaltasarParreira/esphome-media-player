@@ -83,6 +83,10 @@ def test_generated_device_metadata_rejects_wrong_profile_groups() -> None:
     )
 
 
+def test_wrapped_package_device_keeps_screen_tone_profile() -> None:
+    assert "guition-esp32-p4-jc4880p443" in web_device_profiles()["screen_tone"]
+
+
 def test_generated_device_metadata_rejects_unknown_profile() -> None:
     wrong_profiles = dict(web_device_profiles())
     wrong_profiles["screen_rotation"] = [*wrong_profiles["screen_rotation"], "old-device"]
@@ -141,6 +145,7 @@ def main() -> int:
     test_generated_device_metadata_rejects_manifest_slug_non_string_value()
     test_generated_device_metadata_rejects_wrong_public_base_url()
     test_generated_device_metadata_rejects_wrong_profile_groups()
+    test_wrapped_package_device_keeps_screen_tone_profile()
     test_generated_device_metadata_rejects_unknown_profile()
     test_generated_device_metadata_rejects_profile_group_non_list()
     test_json_assignment_requires_assignment()
