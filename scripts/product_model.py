@@ -51,6 +51,13 @@ class Device:
     def height(self) -> int:
         return int(self.display["height"])
 
+    @property
+    def package_paths(self) -> tuple[str, ...]:
+        paths = [self.package_path]
+        if self.alternate_package_paths:
+            paths.extend(self.alternate_package_paths)
+        return tuple(paths)
+
 
 def _load_json(path: Path) -> dict[str, Any]:
     try:
@@ -102,6 +109,14 @@ def web_device_profiles() -> dict[str, list[str]]:
     return {
         "esp32_s3": [device.profile for device in devices if device.chip == "ESP32-S3"],
         "screen_rotation": [device.profile for device in devices],
+        "screen_tone": [
+            device.profile
+            for device in devices
+            if any(
+                "common/addon/warm_tones.yaml" in (ROOT / path).read_text()
+                for path in device.package_paths
+            )
+        ],
         "track_info_duration": [
             device.profile
             for device in devices
