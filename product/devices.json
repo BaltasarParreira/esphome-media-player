@@ -16,7 +16,8 @@
         "local_components": [
           "artwork_image",
           "gsl3680",
-          "mipi_rgb"
+          "mipi_rgb",
+          "speaker_group_helpers"
         ]
       },
       "esphome": {
@@ -78,7 +79,8 @@
         "display_rotation": "0",
         "local_components": [
           "artwork_image",
-          "mipi_rgb"
+          "mipi_rgb",
+          "speaker_group_helpers"
         ]
       },
       "esphome": {
@@ -137,7 +139,8 @@
         "display_rotation": "0",
         "local_components": [
           "artwork_image",
-          "mipi_rgb"
+          "mipi_rgb",
+          "speaker_group_helpers"
         ]
       },
       "esphome": {
@@ -195,7 +198,8 @@
         "friendly_name": "Music Dashboard Dev",
         "local_components": [
           "artwork_image",
-          "mipi_rgb"
+          "mipi_rgb",
+          "speaker_group_helpers"
         ]
       },
       "esphome": {
@@ -251,7 +255,8 @@
         "friendly_name": "Music Dashboard Dev",
         "local_components": [
           "artwork_image",
-          "mipi_rgb"
+          "mipi_rgb",
+          "speaker_group_helpers"
         ]
       },
       "esphome": {
