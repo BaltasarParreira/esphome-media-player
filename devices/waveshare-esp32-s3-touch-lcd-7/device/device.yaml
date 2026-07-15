@@ -18,8 +18,8 @@ esp32:
   framework:
     type: esp-idf
     sdkconfig_options:
-      CONFIG_HTTPD_MAX_URI_LEN: "128"
-      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
+#      CONFIG_HTTPD_MAX_URI_LEN: "128"
+#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
       CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
       CONFIG_LCD_RGB_ISR_IRAM_SAFE: "y"
       CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
@@ -45,24 +45,7 @@ esp32:
 #      CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER: "y"
 #      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER: "y"
       #### 15/07/2026 ####
-      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "16384"
-      # Force Wi-Fi drivers out of IRAM (Saves ~10-15KB)
-      CONFIG_ESP32_WIFI_IRAM_OPT: "n"
-      CONFIG_ESP32_WIFI_RX_IRAM_OPT: "n"
-
-      # Force flash storage drivers out of IRAM
-      CONFIG_SPI_FLASH_ROM_IMPL: "y"
-      CONFIG_SPI_FLASH_LOG_FAILED_WRITE: "n"
-      CONFIG_SPI_FLASH_WARN_SETPING_ZERO: "n"
-
-      # Relocate core math and system libraries to Flash
-      CONFIG_NEWLIB_NANO_FORMAT: "y"
-      # Pin the main ESPHome loop cleanly to Core 0
-      CONFIG_FREERTOS_UNICORE: "n"
-      CONFIG_ESP_MAIN_TASK_AFFINITY_CPU0: "y"
-      
-      # Keep the Wi-Fi/mDNS tasks strictly on Core 0 to prevent memory corruption
-      CONFIG_ESP32_WIFI_TASK_CORE_ID: "0"      
+#      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "16384"     
       #### 15/07/2026 END ####
     advanced:
       enable_idf_experimental_features: true
