@@ -57,6 +57,12 @@ esp32:
 
       # Relocate core math and system libraries to Flash
       CONFIG_NEWLIB_NANO_FORMAT: "y"
+      # Pin the main ESPHome loop cleanly to Core 0
+      CONFIG_FREERTOS_UNICORE: "n"
+      CONFIG_ESP_MAIN_TASK_AFFINITY_CPU0: "y"
+      
+      # Keep the Wi-Fi/mDNS tasks strictly on Core 0 to prevent memory corruption
+      CONFIG_ESP32_WIFI_TASK_CORE_ID: "0"      
       #### 15/07/2026 END ####
     advanced:
       enable_idf_experimental_features: true
