@@ -44,6 +44,7 @@ esp32:
       # This frees up internal RAM by moving non-critical WiFi structures to PSRAM
 #      CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER: "y"
 #      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER: "y"
+      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "16384"
     advanced:
       enable_idf_experimental_features: true
 
