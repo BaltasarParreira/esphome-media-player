@@ -17,8 +17,8 @@ esp32:
   framework:
     type: esp-idf
     sdkconfig_options:
-#      CONFIG_HTTPD_MAX_URI_LEN: "128"
-#      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
+      CONFIG_HTTPD_MAX_URI_LEN: "128"
+      CONFIG_LV_DRAW_SW_SUPPORT_RGB565: "y"
       CONFIG_LCD_RGB_RESTART_IN_VSYNC: "y"
       CONFIG_LCD_RGB_ISR_IRAM_SAFE: "y"
       CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
