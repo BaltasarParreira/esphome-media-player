@@ -23,6 +23,9 @@ globals:
   - id: tv_ha_position_epoch
     type: int
     initial_value: '0'
+  - id: tv_media_duration_valid
+    type: bool
+    initial_value: 'false'
   - id: last_tv_artwork_url
     type: std::string
     initial_value: '""'
@@ -49,16 +52,13 @@ text_sensor:
                       id(last_tv_media_position) = 0.0f;
                       id(last_tv_progress_percent) = -1;
                       id(tv_ha_position_epoch) = 0;
-                      auto t = id(ha_time).now();
-                      if (t.is_valid()) {
-                        id(last_tv_position_timestamp) = t.timestamp;
-                      }
+                      id(last_tv_position_timestamp) = 0;
+                      id(tv_media_duration_valid) = false;
+                      id(artist_has_content) = false;
+                      lv_obj_add_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
                   - lvgl.label.update:
                       id: media_time_label
-                      text: !lambda |-
-                        return id(show_remaining_time).state
-                            ? std::string("0:00 / -0:00")
-                            : std::string("0:00 / 0:00");
+                      text: " - / - "
                   - lvgl.bar.update:
                       id: media_progress_bar
                       value: 0
@@ -361,6 +361,7 @@ sensor:
           condition:
             lambda: 'return id(is_tv_mode);'
           then:
+            - lambda: 'id(tv_media_duration_valid) = x > 0.0f;'
             - script.execute: refresh_progress_bar_from_state
 
   - platform: template
@@ -371,6 +372,12 @@ sensor:
             lambda: 'return id(is_tv_mode);'
           then:
             - lambda: |-
+                if (!id(tv_media_duration_valid)) {
+                  id(last_tv_media_position) = 0.0f;
+                  id(last_tv_position_timestamp) = 0;
+                  id(tv_ha_position_epoch) = 0;
+                  return;
+                }
                 id(last_tv_media_position) = x;
                 auto t = id(ha_time).now();
                 if (id(tv_ha_position_epoch) != 0) {

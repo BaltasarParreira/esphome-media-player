@@ -153,13 +153,14 @@ script:
           id(last_media_progress_percent) = -1;
           id(ha_position_epoch) = 0;
           id(last_position_timestamp) = 0;
+          id(media_duration_valid) = false;
 
           // --- Reset UI ---
           lv_obj_add_flag(id(setup_prompt), LV_OBJ_FLAG_HIDDEN);
           lv_label_set_text(id(media_title_label), "\xe2\x80\x94");
           id(artist_has_content) = false;
           lv_obj_add_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
-          lv_label_set_text(id(media_time_label), "0:00 / -0:00");
+          lv_label_set_text(id(media_time_label), " - / - ");
           lv_bar_set_value(id(media_progress_bar), 0, LV_ANIM_OFF);
           lv_obj_set_style_opa(id(album_art_background_widget), LV_OPA_50, 0);
 
@@ -253,6 +254,7 @@ script:
           id(last_tv_progress_percent) = -1;
           id(tv_ha_position_epoch) = 0;
           id(last_tv_position_timestamp) = 0;
+          id(tv_media_duration_valid) = false;
 
           id(tv_subscription_gen) += 1;
           id(subscribed_linked_media_player_entity) = entity;

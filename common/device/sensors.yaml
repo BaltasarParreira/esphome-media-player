@@ -29,6 +29,9 @@ globals:
   - id: ha_position_epoch
     type: int
     initial_value: '0'
+  - id: media_duration_valid
+    type: bool
+    initial_value: 'false'
   - id: artist_has_content
     type: bool
     initial_value: 'false'
@@ -55,35 +58,37 @@ interval:
           bool playing;
 
           if (id(is_tv_mode)) {
-            dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
+            dur = id(tv_media_duration_valid) && id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
             playing = id(tv_media_player_state_sensor).has_state() && id(tv_media_player_state_sensor).state == "playing";
 
             auto t = id(ha_time).now();
-            if (playing && t.is_valid() && id(tv_ha_position_epoch) != 0 && id(tv_media_position_sensor).has_state()) {
+            if (playing && dur > 0.0f && t.is_valid() && id(tv_ha_position_epoch) != 0 && id(tv_media_position_sensor).has_state()) {
               pos = id(tv_media_position_sensor).state + (float)(t.timestamp - id(tv_ha_position_epoch));
-            } else if (playing && t.is_valid() && id(last_tv_position_timestamp) != 0) {
+            } else if (playing && dur > 0.0f && t.is_valid() && id(last_tv_position_timestamp) != 0) {
               pos = id(last_tv_media_position) + (float)(t.timestamp - id(last_tv_position_timestamp));
               id(last_tv_position_timestamp) = t.timestamp;
             } else {
-              pos = id(tv_media_position_sensor).has_state() ? id(tv_media_position_sensor).state : id(last_tv_media_position);
+              pos = dur > 0.0f && id(tv_media_position_sensor).has_state() ? id(tv_media_position_sensor).state : id(last_tv_media_position);
             }
             if (pos < 0) pos = 0;
+            if (dur <= 0.0f) pos = 0;
             if (dur > 0 && pos > dur) pos = dur;
             id(last_tv_media_position) = pos;
           } else {
-            dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
+            dur = id(media_duration_valid) && id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
             playing = id(media_player_state_sensor).has_state() && id(media_player_state_sensor).state == "playing";
 
             auto t = id(ha_time).now();
-            if (playing && t.is_valid() && id(ha_position_epoch) != 0 && id(media_position_sensor).has_state()) {
+            if (playing && dur > 0.0f && t.is_valid() && id(ha_position_epoch) != 0 && id(media_position_sensor).has_state()) {
               pos = id(media_position_sensor).state + (float)(t.timestamp - id(ha_position_epoch));
-            } else if (playing && t.is_valid() && id(last_position_timestamp) != 0) {
+            } else if (playing && dur > 0.0f && t.is_valid() && id(last_position_timestamp) != 0) {
               pos = id(last_media_position) + (float)(t.timestamp - id(last_position_timestamp));
               id(last_position_timestamp) = t.timestamp;
             } else {
-              pos = id(media_position_sensor).has_state() ? id(media_position_sensor).state : id(last_media_position);
+              pos = dur > 0.0f && id(media_position_sensor).has_state() ? id(media_position_sensor).state : id(last_media_position);
             }
             if (pos < 0) pos = 0;
+            if (dur <= 0.0f) pos = 0;
             if (dur > 0 && pos > dur) pos = dur;
             id(last_media_position) = pos;
           }
@@ -98,12 +103,15 @@ interval:
                     float pos = id(is_tv_mode) ? id(last_tv_media_position) : id(last_media_position);
                     float dur;
                     if (id(is_tv_mode)) {
-                      dur = id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
+                      dur = id(tv_media_duration_valid) && id(tv_media_duration_sensor).has_state() ? id(tv_media_duration_sensor).state : 0.0f;
                     } else {
-                      dur = id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
+                      dur = id(media_duration_valid) && id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f;
                     }
                     int e = (int)pos; if (e < 0) e = 0;
                     char buf[32];
+                    if (dur <= 0.0f) {
+                      return std::string(" - / - ");
+                    }
                     if (id(show_remaining_time).state) {
                       int rem = (int)(dur - pos); if (rem < 0) rem = 0;
                       if (dur >= 3600) {
@@ -166,9 +174,9 @@ script:
           }
 
           const bool tv_mode = id(is_tv_mode);
-          float dur = tv_mode && id(tv_media_duration_sensor).has_state()
+          float dur = tv_mode && id(tv_media_duration_valid) && id(tv_media_duration_sensor).has_state()
               ? id(tv_media_duration_sensor).state
-              : (!tv_mode && id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f);
+              : (!tv_mode && id(media_duration_valid) && id(media_duration_sensor).has_state() ? id(media_duration_sensor).state : 0.0f);
           float pos = tv_mode ? id(last_tv_media_position) : id(last_media_position);
           bool playing = tv_mode
               ? (id(tv_media_player_state_sensor).has_state() && id(tv_media_player_state_sensor).state == "playing")
@@ -316,16 +324,13 @@ text_sensor:
                       id(last_media_position) = 0.0f;
                       id(last_media_progress_percent) = -1;
                       id(ha_position_epoch) = 0;
-                      auto t = id(ha_time).now();
-                      if (t.is_valid()) {
-                        id(last_position_timestamp) = t.timestamp;
-                      }
+                      id(last_position_timestamp) = 0;
+                      id(media_duration_valid) = false;
+                      id(artist_has_content) = false;
+                      lv_obj_add_flag(id(media_artist_label), LV_OBJ_FLAG_HIDDEN);
                   - lvgl.label.update:
                       id: media_time_label
-                      text: !lambda |-
-                        return id(show_remaining_time).state
-                            ? std::string("0:00 / -0:00")
-                            : std::string("0:00 / 0:00");
+                      text: " - / - "
                   - lvgl.bar.update:
                       id: media_progress_bar
                       value: 0
@@ -339,14 +344,20 @@ text_sensor:
     on_value:
       - if:
           condition:
-            lambda: |-
-              return !id(web_settings_active) && !id(is_tv_mode) && !x.empty() && x != "\xe2\x80\x94";
+            lambda: 'return !id(web_settings_active) && !id(is_tv_mode);'
           then:
-            - lambda: 'id(artist_has_content) = true;'
-            - lvgl.label.update:
-                id: media_artist_label
-                text: !lambda 'return x;'
-            - lvgl.widget.show: media_artist_label
+            - if:
+                condition:
+                  lambda: 'return !x.empty() && x != "\xe2\x80\x94";'
+                then:
+                  - lambda: 'id(artist_has_content) = true;'
+                  - lvgl.label.update:
+                      id: media_artist_label
+                      text: !lambda 'return x;'
+                  - lvgl.widget.show: media_artist_label
+                else:
+                  - lambda: 'id(artist_has_content) = false;'
+                  - lvgl.widget.hide: media_artist_label
 
   - platform: template
     id: media_entity_picture_sensor
@@ -517,6 +528,7 @@ sensor:
           condition:
             lambda: 'return !id(is_tv_mode);'
           then:
+            - lambda: 'id(media_duration_valid) = x > 0.0f;'
             - script.execute: refresh_progress_bar_from_state
 
   - platform: template
@@ -527,6 +539,12 @@ sensor:
             lambda: 'return !id(is_tv_mode);'
           then:
             - lambda: |-
+                if (!id(media_duration_valid)) {
+                  id(last_media_position) = 0.0f;
+                  id(last_position_timestamp) = 0;
+                  id(ha_position_epoch) = 0;
+                  return;
+                }
                 id(last_media_position) = x;
                 auto t = id(ha_time).now();
                 if (id(ha_position_epoch) != 0) {
