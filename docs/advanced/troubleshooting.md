@@ -53,6 +53,12 @@ esphome compile /config/music-7inch.yaml
 
 If the folder name is different in your error, delete that folder instead. If you are unsure which folder is affected, deleting `/config/.esphome/external_components/` is also safe; ESPHome will download the external components again on the next compile.
 
+## Firmware compile fails with `speaker_group has not been declared`
+
+Older versions of the project loaded the speaker-group helper through a relative file path that ESPHome resolves incorrectly for remote packages. Update your package to the latest `main` version, choose **Clean Build Files** from the device menu, and compile again.
+
+If your configuration is pinned to an older commit, update or remove the pinned `ref`. As a temporary workaround, place [speaker_group_helpers.h](https://raw.githubusercontent.com/jtenniswood/esphome-media-player/main/components/speaker_group_helpers/speaker_group_helpers.h) at `/config/common/addon/speaker_group_helpers.h` on the Home Assistant host.
+
 ## The screen is black / not responding
 
 - Verify the device is powered via the USB-C port with an adequate power supply (5V 2A recommended).

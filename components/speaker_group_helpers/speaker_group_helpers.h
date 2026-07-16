@@ -4,6 +4,11 @@
 #include <string>
 #include <vector>
 
+#if __has_include("esphome/core/component.h")
+#include "esphome/core/component.h"
+#define SPEAKER_GROUP_HELPERS_HAS_COMPONENT 1
+#endif
+
 namespace esphome {
 namespace speaker_group {
 
@@ -54,4 +59,17 @@ inline std::vector<std::string> parse_group_members(std::string raw) {
 }
 
 }  // namespace speaker_group
+
+namespace speaker_group_helpers {
+
+#ifdef SPEAKER_GROUP_HELPERS_HAS_COMPONENT
+class SpeakerGroupHelpers : public Component {
+ public:
+  std::vector<std::string> parse_group_members(std::string raw) const {
+    return speaker_group::parse_group_members(raw);
+  }
+};
+#endif
+
+}  // namespace speaker_group_helpers
 }  // namespace esphome

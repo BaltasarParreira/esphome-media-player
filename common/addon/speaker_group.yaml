@@ -10,6 +10,9 @@
 # Requires: homeassistant/speakers.yaml template sensor in HA.
 # =============================================================================
 
+speaker_group_helpers:
+  id: speaker_group_helpers_component
+
 globals:
   - id: speaker_count
     type: int
@@ -351,7 +354,7 @@ script:
       - lambda: |-
           std::string raw = id(group_members_sensor).has_state()
               ? id(group_members_sensor).state : "";
-          std::vector<std::string> members = esphome::speaker_group::parse_group_members(raw);
+          std::vector<std::string> members = id(speaker_group_helpers_component).parse_group_members(raw);
 
           std::string selected = id(media_player_entity).state;
           int count = id(speaker_count);

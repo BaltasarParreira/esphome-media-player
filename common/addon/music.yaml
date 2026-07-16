@@ -21,7 +21,7 @@ globals:
 
 external_components:
   - source: github://jtenniswood/esphome-media-player@main
-    components: [artwork_image, mipi_rgb]
+    components: [artwork_image, mipi_rgb, speaker_group_helpers]
     refresh: 1s
 
 http_request:
