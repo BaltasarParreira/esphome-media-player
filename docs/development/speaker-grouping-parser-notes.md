@@ -50,7 +50,7 @@ The parser also tolerates Python-style list strings with brackets and quotes:
 Empty list strings and Home Assistant no-data states such as `None`, `unknown`,
 and `unavailable` are treated as no grouped members.
 
-`common/addon/speaker_group_helpers.h` owns this parsing so it can be checked
+`components/speaker_group_helpers/speaker_group_helpers.h` owns this parsing so it can be checked
 outside firmware builds. Run `npm run check:speaker-group` after changing
 accepted `group_members` formats.
 

@@ -730,7 +730,7 @@ Progress updates:
 - Status: partially fixed. `docs/development/speaker-grouping-parser-notes.md`
   now documents the expected `sensor.speaker_group` attribute format, tolerated
   `group_members` strings, invariants, and manual regression scenarios.
-  `common/addon/speaker_group_helpers.h` now owns the `group_members` parser
+  `components/speaker_group_helpers/speaker_group_helpers.h` now owns the `group_members` parser
   used by the firmware lambda, and `scripts/check_speaker_group_helpers.py`
   covers common Home Assistant comma-separated and quoted-list formats on the
   host, plus empty list and no-data values such as `None`, `unknown`, and
