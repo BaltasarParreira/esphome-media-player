@@ -65,11 +65,9 @@ namespace speaker_group_helpers {
 #ifdef SPEAKER_GROUP_HELPERS_HAS_COMPONENT
 class SpeakerGroupHelpers : public Component {
  public:
-  void trim_chars(std::string &value, const std::string &chars) { speaker_group::trim_chars(value, chars); }
-
-  std::string to_lower_ascii(std::string value) { return speaker_group::to_lower_ascii(value); }
-
-  std::vector<std::string> parse_group_members(std::string raw) { return speaker_group::parse_group_members(raw); }
+  std::vector<std::string> parse_group_members(std::string raw) const {
+    return speaker_group::parse_group_members(raw);
+  }
 };
 #endif
 
