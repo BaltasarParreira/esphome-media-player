@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 ROOT = Path(__file__).resolve().parent.parent
 
 SOURCE = r'''
-#include "common/addon/speaker_group_helpers.h"
+#include "components/speaker_group_helpers/speaker_group_helpers.h"
 
 #include <iostream>
 #include <string>
