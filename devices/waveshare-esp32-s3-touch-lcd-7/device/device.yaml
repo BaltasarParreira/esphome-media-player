@@ -50,6 +50,7 @@ esp32:
       #### 15/07/2026 END ####
     advanced:
       enable_idf_experimental_features: true
+      enable_ota_rollback: false
 
 
 esphome:
