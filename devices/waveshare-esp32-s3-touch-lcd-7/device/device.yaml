@@ -76,17 +76,16 @@ esphome:
         - lambda: |-
             id(lvgl_ready) = true;
         - script.execute: apply_screen_rotation
-  platformio_options:
-    board_build.arduino.memory_type: qio_opi   # --> Bal
-    board_build.f_flash: 80000000L   # --> Bal
-    board_upload.maximum_ram_size: 524288   # --> Bal
-    board_build.flash_mode: dio
-    build_flags:
-      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-      - "-DLV_DRAW_SW_SUPPORT_RGB565=1"
-      - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
-      - "-Wno-deprecated-declarations"
-      - "-DBOARD_HAS_PSRAM"
+  build_flags:
+    - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
+    #- "-DLV_DRAW_SW_SUPPORT_RGB565=1"
+    - "-DCONFIG_COMPILER_OPTIMIZATION_PERF=y"
+    - "-Wno-deprecated-declarations"
+    - "-DBOARD_HAS_PSRAM"
+    - "-DCONFIG_SPIRAM_MODE_OCT=y"
+    - "-DCONFIG_ESPTOOLPY_FLASHFREQ_80M=y"
+    - "-DCONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y"
+    - "-DCONFIG_ESPTOOLPY_FLASHMODE_OPI=y"
   min_version: "2025.8.0"   # --> Bal
 
 
