@@ -111,6 +111,7 @@ ota:
           transition_length: 0s
       - lvgl.resume
 
+safe_mode:
 
 api:
   on_client_connected:
