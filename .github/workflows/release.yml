@@ -15,7 +15,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  ESPHOME_VERSION: 2026.6.4
+  ESPHOME_VERSION: 2026.7.0
 
 jobs:
   release-notes:
@@ -138,13 +138,14 @@ jobs:
           VERSION: ${{ github.event.release.tag_name || inputs.version }}
           RELEASE_SUMMARY: ${{ github.event.release.body || '' }}
         run: |
-          BUILD_DIR=$(dirname "$(find builds/.esphome/build -path '*/.pioenvs/*/firmware.factory.bin' -print -quit)")
+          FACTORY_IMAGE=$(find builds/.esphome/build -type f -name firmware.factory.bin -print -quit)
           mkdir -p output
 
-          if [ ! -f "${BUILD_DIR}/firmware.factory.bin" ]; then
+          if [ -z "$FACTORY_IMAGE" ] || [ ! -f "$FACTORY_IMAGE" ]; then
             echo "::error::Firmware compilation failed - factory binary not found"
             exit 1
           fi
+          BUILD_DIR=$(dirname "$FACTORY_IMAGE")
 
           OTA_IMAGE="${BUILD_DIR}/firmware.ota.bin"
           if [ ! -f "$OTA_IMAGE" ]; then
@@ -155,7 +156,7 @@ jobs:
             exit 1
           fi
 
-          sudo cp "${BUILD_DIR}/firmware.factory.bin" "output/${{ matrix.asset_slug }}.factory.bin"
+          sudo cp "$FACTORY_IMAGE" "output/${{ matrix.asset_slug }}.factory.bin"
           sudo cp "$OTA_IMAGE" "output/${{ matrix.asset_slug }}.ota.bin"
           sudo chown "$USER:$USER" output/*
 
