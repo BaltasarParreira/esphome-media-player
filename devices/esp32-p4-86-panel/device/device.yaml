@@ -22,6 +22,7 @@
 esp32:
   variant: ESP32P4
   flash_size: 32MB
+  flash_mode: dio
   cpu_frequency: 360MHz
   # Current Waveshare 4" P4 panels report ESP-ROM:esp32p4-eco2 in the boot log.
   # ESPHome defaults P4 builds to production rev3 silicon unless this is set.
@@ -48,11 +49,9 @@ esp32:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  platformio_options:
-    board_build.flash_mode: dio
-    build_flags:
-      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-      - "-Wno-deprecated-declarations"
+  build_flags:
+    - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
+    - "-Wno-deprecated-declarations"
 
 
 # -----------------------------------------------------------------------------

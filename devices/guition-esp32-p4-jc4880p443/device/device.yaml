@@ -19,6 +19,7 @@
 esp32:
   variant: ESP32P4
   flash_size: 16MB
+  flash_mode: dio
   cpu_frequency: 360MHz
   engineering_sample: true
   framework:
@@ -53,11 +54,9 @@ esphome:
           brightness: 100%
           transition_length: 500ms
       - script.execute: backlight_wake_timeout
-  platformio_options:
-    board_build.flash_mode: dio
-    build_flags:
-      - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
-      - "-Wno-deprecated-declarations"
+  build_flags:
+    - "-DCONFIG_LV_DISP_DEF_REFR_PERIOD=10"
+    - "-Wno-deprecated-declarations"
 
 
 # ESP32-C6 coprocessor for Wi-Fi and Bluetooth via SDIO
