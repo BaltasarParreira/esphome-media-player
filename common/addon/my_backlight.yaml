@@ -793,7 +793,7 @@ script:
               hour = hour % 12;
               if (hour == 0) hour = 12;
             }
-            char buf[7];
+            char buf[10];
             snprintf(buf, sizeof(buf), "%02d:%02d", hour, time.minute);
             lv_label_set_text(id(clock_label), buf);
             minute = time.minute;
