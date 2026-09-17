@@ -51,6 +51,9 @@ esp32:
     advanced:
       enable_idf_experimental_features: true
       enable_ota_rollback: false
+  platformio_options:
+    build_flags:
+      - "-Dlibjpeg-turbo-esp32"
 
 
 esphome:
