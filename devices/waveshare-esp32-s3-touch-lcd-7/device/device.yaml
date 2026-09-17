@@ -88,9 +88,6 @@ esphome:
     #- "-DCONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y"
     - "-DCONFIG_ESPTOOLPY_FLASHMODE_OPI=y"
   min_version: "2025.8.0"   # --> Bal
-  esp_idf_component_requirements:
-    custom:
-      - libjpeg-turbo-esp32
 
 psram:
   mode: octal
