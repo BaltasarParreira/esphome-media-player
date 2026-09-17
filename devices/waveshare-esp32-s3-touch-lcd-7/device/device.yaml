@@ -51,8 +51,9 @@ esp32:
     advanced:
       enable_idf_experimental_features: true
       enable_ota_rollback: false
-  framework_components:
-    - name: libjpeg-turbo-esp32
+  include_builtin_idf_components:
+    - libjpeg-turbo-esp32
+
 
 esphome:
   name: ${name}
@@ -88,7 +89,6 @@ esphome:
     #- "-DCONFIG_ESPTOOLPY_FLASHFREQ_80M=y"
     #- "-DCONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y"
     - "-DCONFIG_ESPTOOLPY_FLASHMODE_OPI=y"
-    - "-DCONFIG_LIBJPEG_TURBO_ESP32=1"
   min_version: "2025.8.0"   # --> Bal
 
 
