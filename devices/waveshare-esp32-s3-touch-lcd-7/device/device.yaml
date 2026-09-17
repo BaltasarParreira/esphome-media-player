@@ -51,9 +51,8 @@ esp32:
     advanced:
       enable_idf_experimental_features: true
       enable_ota_rollback: false
-  include_builtin_idf_components:
+  esp32_idf_component_requirements:
     - libjpeg-turbo-esp32
-
 
 esphome:
   name: ${name}
