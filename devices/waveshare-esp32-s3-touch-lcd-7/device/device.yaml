@@ -87,6 +87,10 @@ esphome:
     #- "-DCONFIG_ESPTOOLPY_FLASHFREQ_80M=y"
     #- "-DCONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y"
     - "-DCONFIG_ESPTOOLPY_FLASHMODE_OPI=y"
+    - "-DCONFIG_LIBJPEG_TURBO_ESP32=1"
+  advanced:
+    component_compile_flags:
+      - -DCONFIG_LIBJPEG_TURBO_ESP32=1
   min_version: "2025.8.0"   # --> Bal
 
 
