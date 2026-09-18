@@ -214,25 +214,6 @@ CONFIG_SCHEMA = cv.Schema(
     )
 )
 
-def patch_cmake_requirements(config):
-    """Runs after ESPHome writes files to disk, modifying CMake before compilation."""
-    from esphome.core import CORE
-    if CORE.is_esp32 and CORE.using_esp_idf:
-        target_path = os.path.join(CORE.build_dir, "src", "CMakeLists.txt")
-        if os.path.exists(target_path):
-            with open(target_path, "r", encoding="utf-8") as f:
-                content = f.read()
-            
-            if "idf_component_register" in content and "libjpeg-turbo-esp32" not in content:
-                patched = content.replace(
-                    "idf_component_register(", 
-                    "idf_component_register(\n    REQUIRES libjpeg-turbo-esp32\n"
-                )
-                with open(target_path, "w", encoding="utf-8") as f:
-                    f.write(patched)
-    return config
-
-
 SET_URL_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.use_id(ArtworkImage),
@@ -332,41 +313,3 @@ async def to_code(config):
         cg.add(var.set_placeholder(placeholder))
 
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
-
-    # =========================================================================
-    # CORE INTERCEPTOR: MONKEY-PATCH PYTHON'S FILE IO TO FORCE CMAKE REQUIREMENT
-    # =========================================================================
-    from esphome.core import CORE
-    if CORE.is_esp32 and CORE.using_esp_idf:
-        # 1. Register your bundled component path natively to CMake
-        esp32.add_idf_component(
-            name="libjpeg-turbo-esp32",
-            path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
-        )
-
-        # 2. Intercept Python's global open method to rewrite the target string on-the-fly
-        import builtins
-        real_open = builtins.open
-
-        def custom_open(file, mode="r", *args, **kwargs):
-            # Check if ESPHome is opening the main src CMake configuration file for writing
-            if isinstance(file, str) and file.endswith(os.path.join("src", "CMakeLists.txt")) and "w" in mode:
-                class CMakeWriteWrapper:
-                    def __init__(self, filename, file_mode, *a, **kw):
-                        self.underlying_file = real_open(filename, file_mode, *a, **kw)
-                    def write(self, text):
-                        if "idf_component_register" in text and "libjpeg-turbo-esp32" not in text:
-                            text = text.replace(
-                                "idf_component_register(",
-                                "idf_component_register(\n    REQUIRES libjpeg-turbo-esp32\n"
-                            )
-                        return self.underlying_file.write(text)
-                    def __enter__(self): return self
-                    def __exit__(self, exc_type, exc_val, exc_tb): self.underlying_file.close()
-                    def close(self): self.underlying_file.close()
-                return CMakeWriteWrapper(file, mode, *args, **kwargs)
-            return real_open(file, mode, *args, **kwargs)
-
-        # Apply the wrapper globally to the active compiler process
-        builtins.open = custom_open
-
