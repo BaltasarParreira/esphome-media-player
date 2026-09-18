@@ -269,6 +269,10 @@ async def to_code(config):
                 esp32.add_idf_sdkconfig_option(
                     "CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY", True
                 )
+                esp32.add_idf_component(
+                    name="libjpeg-turbo-esp32",
+                    path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
+                )
         except Exception as err:
             _LOGGER.debug("Could not enable ESP-IDF insecure TLS options: %s", err)
     if lvgl_defines is not None:
@@ -313,7 +317,3 @@ async def to_code(config):
         cg.add(var.set_placeholder(placeholder))
 
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
-    # Tell ESPHome to inject 'libjpeg-turbo-esp32' into the generated main CMake requirements tree
-    from esphome.core import CORE
-    if CORE.is_esp32 and CORE.using_esp_idf:
-        esp32.register_idf_component_requirement("libjpeg-turbo-esp32")
