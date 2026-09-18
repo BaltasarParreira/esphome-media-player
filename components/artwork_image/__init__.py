@@ -211,10 +211,6 @@ CONFIG_SCHEMA = cv.Schema(
             host=cv.Version(0, 0, 0),
         ),
         validate_settings,
-        # =====================================================================
-        # THIS CALL RUNS DURING THE FINAL VALIDATION AND WRITES THE MODIFICATION
-        # =====================================================================
-        patch_cmake_requirements,
     )
 )
 
@@ -336,3 +332,19 @@ async def to_code(config):
         cg.add(var.set_placeholder(placeholder))
 
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
+
+    # =========================================================================
+    # NATIVE ESPHOME API METHOD FOR HANDLING ESP-IDF COMPONENT DEPENDENCIES
+    # =========================================================================
+    from esphome.core import CORE
+    if CORE.is_esp32 and CORE.using_esp_idf:
+        from esphome.components.esp32 import include_builtin_idf_component
+        
+        # 1. Register your bundled component path natively to CMake 
+        esp32.add_idf_component(
+            name="libjpeg-turbo-esp32",
+            path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
+        )
+        
+        # 2. Tell the central build engine to link it into the main app target 
+        include_builtin_idf_component("libjpeg-turbo-esp32")
