@@ -315,28 +315,35 @@ async def to_code(config):
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
 
     # =========================================================================
-    # UNIVERSAL COMPILER PATCH: FORCE REQUIREMENT INSIDE GENERATED CMAKE
+    # GUARANTEED FILE PATCH VIA ATEXIT (RUNS AFTER ESPHOME WRITES CMAKE)
     # =========================================================================
     from esphome.core import CORE
     if CORE.is_esp32 and CORE.using_esp_idf:
-        # Register the vendor directory to the master ESP-IDF registry path
+        import atexit
+        
+        # 1. Register the component path natively with ESP-IDF
         esp32.add_idf_component(
             name="libjpeg-turbo-esp32",
             path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
         )
 
-        # Hook into ESPHome's post-generation routine to overwrite the file
-        def patch_generated_cmake():
+        # 2. Define a function to patch the CMakeLists file once ESPHome finishes generating it
+        def force_cmake_requirement():
             target_path = os.path.join(CORE.build_dir, "src", "CMakeLists.txt")
             if os.path.exists(target_path):
                 with open(target_path, "r", encoding="utf-8") as f:
                     content = f.read()
                 
-                # Replace the simple registration line with a forced requirement block
-                if "REQUIRES" in content and "libjpeg-turbo-esp32" not in content:
-                    patched = content.replace("REQUIRES", "REQUIRES libjpeg-turbo-esp32")
+                # Replace the registration macro with our forced dependency version
+                if "idf_component_register" in content and "libjpeg-turbo-esp32" not in content:
+                    # In modern ESPHome, it typically looks like idf_component_register(SRCS ... REQUIRES ...)
+                    # We inject the requirement right into the function arguments
+                    patched = content.replace(
+                        "idf_component_register(", 
+                        "idf_component_register(\n    REQUIRES libjpeg-turbo-esp32\n"
+                    )
                     with open(target_path, "w", encoding="utf-8") as f:
                         f.write(patched)
-                        
-        # Register the hook execution right before compiling steps kick off
-        CORE.register_custom_hook(patch_generated_cmake)
+
+        # Register this with Python's exit handler so it triggers right before compilation
+        atexit.register(force_cmake_requirement)
