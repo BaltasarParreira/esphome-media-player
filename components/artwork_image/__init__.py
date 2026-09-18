@@ -332,3 +332,29 @@ async def to_code(config):
         cg.add(var.set_placeholder(placeholder))
 
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
+
+    # =========================================================================
+    # NATIVE ESP-IDF MANIFEST INJECTION (BYPASSES CMAKE OVERWRITES)
+    # =========================================================================
+    from esphome.core import CORE
+    if CORE.is_esp32 and CORE.using_esp_idf:
+        # 1. Ensure the custom source directory is registered as an extra component
+        esp32.add_idf_component(
+            name="libjpeg-turbo-esp32",
+            path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
+        )
+
+        # 2. Write a pristine idf_component.yml directly to the generated src component
+        # Because ESPHome doesn't generate this file, it will never be overwritten.
+        manifest_path = os.path.join(CORE.build_dir, "src", "idf_component.yml")
+        manifest_content = (
+            "dependencies:\n"
+            "  libjpeg-turbo-esp32:\n"
+            "    version: \"*\"\n"
+        )
+        
+        try:
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                f.write(manifest_content)
+        except Exception as e:
+            _LOGGER.error("Failed to write ESP-IDF component manifest: %s", e)
