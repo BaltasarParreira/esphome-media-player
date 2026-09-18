@@ -83,6 +83,11 @@ class JPEGFormat(Format):
 
     def actions(self):
         cg.add_define("USE_ARTWORK_IMAGE_JPEG_SUPPORT")
+        try:
+            esp32.add_idf_component(
+                name="libjpeg-turbo-esp32"
+            )
+        except Exception
         import shutil
         from esphome.core import CORE
 
