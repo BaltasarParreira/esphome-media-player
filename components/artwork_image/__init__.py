@@ -315,11 +315,12 @@ async def to_code(config):
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
 
     # =========================================================================
-    # GUARANTEED FILE PATCH VIA ATEXIT (RUNS AFTER ESPHOME WRITES CMAKE)
+    # DETECT AND PATCH GENERATED CMAKE LABELS RIGHT BEFORE NINJA COMPILES
     # =========================================================================
     from esphome.core import CORE
     if CORE.is_esp32 and CORE.using_esp_idf:
         import atexit
+        import time
         
         # 1. Register the component path natively with ESP-IDF
         esp32.add_idf_component(
@@ -330,14 +331,19 @@ async def to_code(config):
         # 2. Define a function to patch the CMakeLists file once ESPHome finishes generating it
         def force_cmake_requirement():
             target_path = os.path.join(CORE.build_dir, "src", "CMakeLists.txt")
+            
+            # Wait up to 3 seconds for ESPHome to finish writing the file to disk
+            for _ in range(30):
+                if os.path.exists(target_path):
+                    break
+                time.sleep(0.1)
+
             if os.path.exists(target_path):
                 with open(target_path, "r", encoding="utf-8") as f:
                     content = f.read()
                 
-                # Replace the registration macro with our forced dependency version
+                # Verify and inject the requirement into the file
                 if "idf_component_register" in content and "libjpeg-turbo-esp32" not in content:
-                    # In modern ESPHome, it typically looks like idf_component_register(SRCS ... REQUIRES ...)
-                    # We inject the requirement right into the function arguments
                     patched = content.replace(
                         "idf_component_register(", 
                         "idf_component_register(\n    REQUIRES libjpeg-turbo-esp32\n"
