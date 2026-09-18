@@ -211,8 +211,31 @@ CONFIG_SCHEMA = cv.Schema(
             host=cv.Version(0, 0, 0),
         ),
         validate_settings,
+        # =====================================================================
+        # THIS CALL RUNS DURING THE FINAL VALIDATION AND WRITES THE MODIFICATION
+        # =====================================================================
+        patch_cmake_requirements,
     )
 )
+
+def patch_cmake_requirements(config):
+    """Runs after ESPHome writes files to disk, modifying CMake before compilation."""
+    from esphome.core import CORE
+    if CORE.is_esp32 and CORE.using_esp_idf:
+        target_path = os.path.join(CORE.build_dir, "src", "CMakeLists.txt")
+        if os.path.exists(target_path):
+            with open(target_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            
+            if "idf_component_register" in content and "libjpeg-turbo-esp32" not in content:
+                patched = content.replace(
+                    "idf_component_register(", 
+                    "idf_component_register(\n    REQUIRES libjpeg-turbo-esp32\n"
+                )
+                with open(target_path, "w", encoding="utf-8") as f:
+                    f.write(patched)
+    return config
+
 
 SET_URL_SCHEMA = cv.Schema(
     {
@@ -313,43 +336,3 @@ async def to_code(config):
         cg.add(var.set_placeholder(placeholder))
 
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
-
-    # =========================================================================
-    # DETECT AND PATCH GENERATED CMAKE LABELS RIGHT BEFORE NINJA COMPILES
-    # =========================================================================
-    from esphome.core import CORE
-    if CORE.is_esp32 and CORE.using_esp_idf:
-        import atexit
-        import time
-        
-        # 1. Register the component path natively with ESP-IDF
-        esp32.add_idf_component(
-            name="libjpeg-turbo-esp32",
-            path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
-        )
-
-        # 2. Define a function to patch the CMakeLists file once ESPHome finishes generating it
-        def force_cmake_requirement():
-            target_path = os.path.join(CORE.build_dir, "src", "CMakeLists.txt")
-            
-            # Wait up to 3 seconds for ESPHome to finish writing the file to disk
-            for _ in range(30):
-                if os.path.exists(target_path):
-                    break
-                time.sleep(0.1)
-
-            if os.path.exists(target_path):
-                with open(target_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-                
-                # Verify and inject the requirement into the file
-                if "idf_component_register" in content and "libjpeg-turbo-esp32" not in content:
-                    patched = content.replace(
-                        "idf_component_register(", 
-                        "idf_component_register(\n    REQUIRES libjpeg-turbo-esp32\n"
-                    )
-                    with open(target_path, "w", encoding="utf-8") as f:
-                        f.write(patched)
-
-        # Register this with Python's exit handler so it triggers right before compilation
-        atexit.register(force_cmake_requirement)
