@@ -334,20 +334,16 @@ async def to_code(config):
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
 
     # =========================================================================
-    # FORCE INJECTION INTO INTERNALLY TRACKED ESP-IDF REQUIRES SCHEMAS
+    # ENFORCE C++ INCLUDE DIRECTORY TO THE APPARENT COMPONENT MATRIX
     # =========================================================================
     from esphome.core import CORE
     if CORE.is_esp32 and CORE.using_esp_idf:
-        from esphome.components.esp32 import KEY_ESP32, CONF_COMPONENTS
-        
-        # 1. Register the folder path natively to the CMake index
+        # 1. Register your vendor component directory to the master CMake list
         esp32.add_idf_component(
             name="libjpeg-turbo-esp32",
             path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
         )
         
-        # 2. Directly append to the core active compilation components tracking list
-        # This forces the generator to append it to the 'src/CMakeLists.txt' REQUIRES block
-        if KEY_ESP32 in CORE.data and CONF_COMPONENTS in CORE.data[KEY_ESP32]:
-            if "libjpeg-turbo-esp32" not in CORE.data[KEY_ESP32][CONF_COMPONENTS]:
-                CORE.data[KEY_ESP32][CONF_COMPONENTS].append("libjpeg-turbo-esp32")
+        # 2. Directly expose the path to the C++ compiler's pre-processor
+        # This completely bypasses the strict 'src/CMakeLists.txt' requirements list error.
+        cg.add_build_flag("-Icomponents/libjpeg-turbo-esp32/src")
