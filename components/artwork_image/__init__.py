@@ -257,6 +257,7 @@ async def artwork_image_action_to_code(config, action_id, template_arg, args):
 
 
 async def to_code(config):
+    cg.add_build_flag("-DIDF_COMPONENT_REQUIRES=libjpeg-turbo-esp32")
     image_format = IMAGE_FORMATS[config[CONF_FORMAT]]
     image_format.actions()
     if config[CONF_ALLOW_INSECURE_LOCAL_URLS]:
