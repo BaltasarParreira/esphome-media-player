@@ -334,17 +334,20 @@ async def to_code(config):
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
 
     # =========================================================================
-    # NATIVE ESPHOME API METHOD FOR HANDLING ESP-IDF COMPONENT DEPENDENCIES
+    # FORCE INJECTION INTO INTERNALLY TRACKED ESP-IDF REQUIRES SCHEMAS
     # =========================================================================
     from esphome.core import CORE
     if CORE.is_esp32 and CORE.using_esp_idf:
-        from esphome.components.esp32 import include_builtin_idf_component
+        from esphome.components.esp32 import KEY_ESP32, CONF_COMPONENTS
         
-        # 1. Register your bundled component path natively to CMake 
+        # 1. Register the folder path natively to the CMake index
         esp32.add_idf_component(
             name="libjpeg-turbo-esp32",
             path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
         )
         
-        # 2. Tell the central build engine to link it into the main app target 
-        include_builtin_idf_component("libjpeg-turbo-esp32")
+        # 2. Directly append to the core active compilation components tracking list
+        # This forces the generator to append it to the 'src/CMakeLists.txt' REQUIRES block
+        if KEY_ESP32 in CORE.data and CONF_COMPONENTS in CORE.data[KEY_ESP32]:
+            if "libjpeg-turbo-esp32" not in CORE.data[KEY_ESP32][CONF_COMPONENTS]:
+                CORE.data[KEY_ESP32][CONF_COMPONENTS].append("libjpeg-turbo-esp32")
