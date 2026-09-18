@@ -83,11 +83,6 @@ class JPEGFormat(Format):
 
     def actions(self):
         cg.add_define("USE_ARTWORK_IMAGE_JPEG_SUPPORT")
-    async def to_code(config):
-        # This automatically appends the component to the internal REQUIRES tracking
-        cg.add_build_flag("-DREQUIRES=libjpeg-turbo-esp32") 
-        # Or more directly utilizing the framework definitions:
-        cg.add_library("libjpeg-turbo-esp32", "")
         import shutil
         from esphome.core import CORE
 
