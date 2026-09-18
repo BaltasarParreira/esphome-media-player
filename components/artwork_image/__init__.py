@@ -313,13 +313,30 @@ async def to_code(config):
         cg.add(var.set_placeholder(placeholder))
 
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
+
+    # =========================================================================
+    # UNIVERSAL COMPILER PATCH: FORCE REQUIREMENT INSIDE GENERATED CMAKE
+    # =========================================================================
     from esphome.core import CORE
     if CORE.is_esp32 and CORE.using_esp_idf:
-        # 1. Register the vendor component directory to the master CMake list
+        # Register the vendor directory to the master ESP-IDF registry path
         esp32.add_idf_component(
             name="libjpeg-turbo-esp32",
             path=os.path.join(os.path.dirname(__file__), "..", "libjpeg-turbo-esp32")
         )
-        # 2. Append the string directly into ESPHome's internal IDF component tracking array
-        if "libjpeg-turbo-esp32" not in CORE.data[esp32.KEY_ESP32][esp32.CONF_COMPONENTS]:
-            CORE.data[esp32.KEY_ESP32][esp32.CONF_COMPONENTS].append("libjpeg-turbo-esp32")
+
+        # Hook into ESPHome's post-generation routine to overwrite the file
+        def patch_generated_cmake():
+            target_path = os.path.join(CORE.build_dir, "src", "CMakeLists.txt")
+            if os.path.exists(target_path):
+                with open(target_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                
+                # Replace the simple registration line with a forced requirement block
+                if "REQUIRES" in content and "libjpeg-turbo-esp32" not in content:
+                    patched = content.replace("REQUIRES", "REQUIRES libjpeg-turbo-esp32")
+                    with open(target_path, "w", encoding="utf-8") as f:
+                        f.write(patched)
+                        
+        # Register the hook execution right before compiling steps kick off
+        CORE.register_custom_hook(patch_generated_cmake)
