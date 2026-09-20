@@ -98,19 +98,19 @@ psram:
 # Hide screen during OTA to avoid flicker
 ota:
   platform: esphome
-    id: secure_ota
-    on_begin:
-      - lambda: 'global_preferences->sync();'
-      - lvgl.pause
-      - light.turn_off:
-          id: backlight
-          transition_length: 0s
-    on_error:
-      - light.turn_on:
-          id: backlight
-          brightness: 100%
-          transition_length: 0s
-      - lvgl.resume
+  id: secure_ota
+  on_begin:
+    - lambda: 'global_preferences->sync();'
+    - lvgl.pause
+    - light.turn_off:
+        id: backlight
+        transition_length: 0s
+  on_error:
+    - light.turn_on:
+        id: backlight
+        brightness: 100%
+        transition_length: 0s
+    - lvgl.resume
   encryption:
 
 safe_mode:
