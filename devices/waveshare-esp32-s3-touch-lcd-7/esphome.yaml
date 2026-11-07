@@ -15,7 +15,7 @@ wifi:
 # Packages
 packages:
   music_dashboard:
-    url: https://github.com/jtenniswood/esphome-media-player
-    files: [devices/guition-esp32-p4-jc8012p4a1/packages.yaml]
+    url: https://github.com/BaltasarParreira/esphome-media-player
+    files: [devices/waveshare-esp32-s3-touch-lcd-7/packages.yaml]
     ref: main
     refresh: 1s
