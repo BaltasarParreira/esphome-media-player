@@ -202,14 +202,14 @@ output:
     id: backlight_output
     pin: 16 # pin: GPIO23 --> Balta
     frequency: 20kHz
-  - platform: gpio
-    id: backlight_output_ws
-    pin:
-      ch422g: ch422g_hub
-      number: 2
-      mode:
-        output: true
-      inverted: false
+#  - platform: gpio
+#    id: backlight_output_ws
+#    pin:
+#      ch422g: ch422g_hub
+#      number: 2
+#      mode:
+#        output: true
+#      inverted: false
 
 ch422g:
   - id: ch422g_hub
